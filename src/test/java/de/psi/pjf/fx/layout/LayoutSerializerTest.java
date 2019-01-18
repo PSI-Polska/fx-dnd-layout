@@ -1,4 +1,4 @@
-package de.psi.pjf;
+package de.psi.pjf.fx.layout;
 
 import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
