@@ -1,0 +1,27 @@
+/**********************************
+    Container DnD styles START
+***********************************/
+
+.stack-move {
+	-fx-close-tab-animation: NONE
+}
+
+.part-expand-group {
+	-fx-background-color: gray
+}
+
+.area-overlay > .area {
+	-fx-border-color: rgba(0,0,0,0.3);
+	-fx-border-width: 3px;
+}
+
+.area-overlay > .area.active {
+	-fx-background-color: rgba(0,0,0,0.3);
+}
+
+.overlay-container {
+	-fx-background-color: rgba(100,100,100,0.75);
+}
+/**********************************
+     Container DnD styles END
+***********************************/
