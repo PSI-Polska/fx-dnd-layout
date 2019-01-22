@@ -27,47 +27,9 @@ public interface StackContainerIf< N extends TabPane > extends ContainerIf< N >
     N getNode();
 
     /**
-     * Get the index of the tab inde
-     *
-     * @param aTab
-     *     the tab
-     *
-     * @return the index
-     */
-    int indexOf( TabContainerWrapperIf< ? > aTab );
-
-    /**
-     * Remove the tab
-     *
-     * @param aTab
-     *     the tab
-     *
-     * @return <code>true</code> if remove succeeded
-     */
-    boolean remove( TabContainerWrapperIf< ? > aTab );
-
-    /**
-     * Add the tab
-     *
-     * @param aTab
-     *     the tab
-     */
-    void add( TabContainerWrapperIf< ? > aTab );
-
-    /**
-     * Add the tab at a given index
-     *
-     * @param index
-     *     the index
-     * @param aTab
-     *     the tab
-     */
-    void add( int index, TabContainerWrapperIf< ? > aTab );
-
-    /**
      * @return the number of tab elements
      */
-    int getTabNumber();
+    int getTabCount();
 
     /**
      * Select the tab
@@ -79,4 +41,6 @@ public interface StackContainerIf< N extends TabPane > extends ContainerIf< N >
     void setSide( Side aSide );
 
     Side getSide();
+
+    TabContainerWrapperIf< ? > getSelectedTab();
 }

@@ -11,12 +11,13 @@
 package de.psi.pjf.fx.layout.dnd;
 
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
 
+import de.psi.pjf.fx.layout.container.ContainerIf;
 import de.psi.pjf.fx.layout.container.ContainerUtils;
 import de.psi.pjf.fx.layout.container.TabContainerWrapperIf;
 
@@ -26,20 +27,13 @@ import de.psi.pjf.fx.layout.container.TabContainerWrapperIf;
 public class StackDndSupport extends AbstractDndSupport
 {
 
-    private final Supplier< Function< DragData, Boolean > > dragStartCallbackProvider;
-
-    private final Supplier< Function< DropData, Void > > dropCallbackProvider;
-
-    //    private final TabPane stack;
-
-    private final DndService dndService;
-
-    //	private final ModelService modelService;
-
     /**
      * Support detach drag and drop
      */
     public final static boolean DETACHABLE_DRAG = Boolean.getBoolean( "detachdrag.enabled" ); //$NON-NLS-1$
+    private final Supplier< Predicate< DragData > > dragStartCallbackProvider;
+    private final Supplier< Consumer< DropData > > dropCallbackProvider;
+    private final DndService dndService;
 
     /**
      * Create a new dnd support instance
@@ -50,22 +44,17 @@ public class StackDndSupport extends AbstractDndSupport
      *     the drop callback
      * @param feedbackService
      *     the feedback service
-     * @param stack
-     *     the stack working for
      * @param dndService
      *     the dnd service
      */
-    public StackDndSupport( Supplier< Function< DragData, Boolean > > dragStartCallbackProvider,
-        Supplier< Function< DropData, Void > > dropCallbackProvider, DndFeedbackService feedbackService,
-        //        TabPane stack,
-        DndService dndService )//, ModelService modelService )
+    public StackDndSupport( Supplier< Predicate< DragData > > dragStartCallbackProvider,
+        Supplier< Consumer< DropData > > dropCallbackProvider, DndFeedbackService feedbackService,
+        DndService dndService )
     {
         super( feedbackService );
         this.dndService = dndService;
         this.dragStartCallbackProvider = dragStartCallbackProvider;
         this.dropCallbackProvider = dropCallbackProvider;
-        //        this.stack = stack;
-        //        this.modelService = modelService;
     }
 
     /**
@@ -78,19 +67,8 @@ public class StackDndSupport extends AbstractDndSupport
      */
     public String clipboardDataFunction( TabContainerWrapperIf< ? > tab )
     {
-        //        MStackElement domElement = ( (WStackItem< ?, ? >)tab.getUserData() ).getDomElement();
-        //        String rv = null;
-        //        if( domElement != null )
-        //        {
-        //            rv = this.modelService.getUniqueId( domElement );
-        //        }
-        //        if( rv != null )
-        //        {
-        //            return rv;
-        //        }
-        //        throw new IllegalStateException( "The model element has no ID" ); //$NON-NLS-1$
         final Tab t = tab.getTab();
-        return Optional.ofNullable( ContainerUtils.getNodeId( t.getContent() ) ).orElse( "sampleid" );
+        return ContainerUtils.getNodeId( t.getContent() );
     }
 
     /**
@@ -104,41 +82,20 @@ public class StackDndSupport extends AbstractDndSupport
     @SuppressWarnings( "null" )
     public Boolean handleDragStart( TabContainerWrapperIf< ? > tab )
     {
-        Function< DragData, Boolean > dragStartCallback = this.dragStartCallbackProvider.get();
-        if( dragStartCallback != null )
+        Predicate< DragData > dragStartCallback = this.dragStartCallbackProvider.get();
+        if( dragStartCallback == null )
         {
-            final Tab t = tab.getTab();
-            if( t != null )
-            {
-                DragData dragData = new DragData( t.getTabPane(), t.getContent() );
-                if( dragStartCallback.apply( dragData ) )
-                {
-                    return Boolean.TRUE;
-                }
-            }
-            //            WStackItem< ?, ? > item =
-            //                (org.eclipse.fx.ui.workbench.renderers.base.widget.WStack.WStackItem< ?, ? >)tab
-            //                    .getUserData();
-            //            MStackElement itemElement = item.getDomElement();
-            //            if( itemElement == null )
-            //            {
-            //                return Boolean.FALSE;
-            //            }
-            //            MPartStack itemContainer = (MPartStack)(MUIElement)itemElement.getParent();
-            //            if( itemContainer != null )
-            //            {
-            //                DragData dragData = new DragData( itemContainer, itemElement );
-            //                if( dragStartCallback.call( dragData ).booleanValue() )
-            //                {
-            //                    return Boolean.TRUE;
-            //                }
-            //            }
-            //            else
-            //            {
-            //                LOGGER.error(
-            //                    "Stack element '" + itemElement + "' has no container" ); //$NON-NLS-1$//$NON-NLS-2$
-            //            }
-            //
+            return Boolean.FALSE;
+        }
+        final Tab t = tab.getTab();
+        if( t == null )
+        {
+            return Boolean.FALSE;
+        }
+        final DragData dragData = new DragData( tab.getParent(), tab );
+        if( dragStartCallback.test( dragData ) )
+        {
+            return Boolean.TRUE;
         }
         return Boolean.FALSE;
     }
@@ -152,21 +109,18 @@ public class StackDndSupport extends AbstractDndSupport
     @SuppressWarnings( "all" )
     public void handleDropped( DndTabPaneFactory.DroppedData data )
     {
-        Function< DropData, Void > call = this.dropCallbackProvider.get();
+        Consumer< DropData > call = this.dropCallbackProvider.get();
         if( call != null )
         {
             if( data.dropType == DndTabPaneFactory.DropType.DETACH )
             {
-                //                WStackItem< ?, ? > sourceItem =
-                //                    (org.eclipse.fx.ui.workbench.renderers.base.widget.WStack.WStackItem< ?, ? >)data.draggedTab
-                //                        .getUserData();
-                //                MStackElement domElement = sourceItem.getDomElement();
-                //                if( domElement != null )
-                //                {
                 final Tab tab = data.draggedTab.getTab();
-                call.apply(
-                    new DropData( data.x, data.y, null, tab.getContent(), BasicDropLocation.DETACH ) );
-                //                }
+                final Optional< ContainerIf< ? > > container = ContainerUtils.getContainer( tab );
+                if( container.isPresent() )
+                {
+                    call.accept(
+                        new DropData( data.x, data.y, null, container.get(), BasicDropLocation.DETACH ) );
+                }
             }
             else if( data.targetTab != null )
             {
@@ -178,20 +132,37 @@ public class StackDndSupport extends AbstractDndSupport
                     return;
                 }
 
-                final TabPane draggedTabParent = draggedTab.getTabPane();
-                final TabPane targetTabParent = targetTab.getTabPane();
-
-                if( targetTabParent != draggedTabParent && this.dndService != null && !this.dndService
-                    .reparentAllowed( draggedTab.getContent(), draggedTabParent ) )
+                final Optional< ContainerIf< ? > > draggedTabContainer =
+                    ContainerUtils.getContainer( draggedTab );
+                final Optional< ContainerIf< ? > > targetTabContainer =
+                    ContainerUtils.getContainer( targetTab );
+                if( draggedTabContainer.isEmpty() || targetTabContainer.isEmpty() )
+                {
+                    cleanup();
+                    return;
+                }
+                final ContainerIf< ? > draggedTabContainerParent = draggedTabContainer.get().getParent();
+                final ContainerIf< ? > targetTabContainerParent = targetTabContainer.get().getParent();
+                if( draggedTabContainerParent == null || targetTabContainerParent == null )
                 {
                     cleanup();
                     return;
                 }
 
-                final DropLocation dropLocation =
-                    data.dropType == DndTabPaneFactory.DropType.AFTER ? BasicDropLocation.AFTER : BasicDropLocation.BEFORE;
-                call.apply( new DropData( data.x, data.y, targetTab.getContent(), draggedTab.getContent(),
-                    dropLocation ) );
+                if( draggedTabContainerParent != targetTabContainerParent && this.dndService != null
+                    && !this.dndService
+                    .reparentAllowed( draggedTabContainer.get(), draggedTabContainerParent ) )
+                {
+                    cleanup();
+                    return;
+                }
+
+                final DropLocation dropLocation = data.dropType == DndTabPaneFactory.DropType.AFTER ?
+                    BasicDropLocation.AFTER :
+                    BasicDropLocation.BEFORE;
+                call.accept(
+                    new DropData( data.x, data.y, targetTabContainer.get(), draggedTabContainer.get(),
+                        dropLocation ) );
             }
         }
     }
@@ -217,21 +188,34 @@ public class StackDndSupport extends AbstractDndSupport
             return;
         }
 
-        final TabPane draggedTabParent = draggedTab.getTabPane();
-        final TabPane targetTabParent = targetTab.getTabPane();
-
-        if( targetTabParent != draggedTabParent && this.dndService != null && !this.dndService
-            .reparentAllowed( draggedTab.getContent(), draggedTabParent ) )
+        final Optional< ContainerIf< ? > > draggedTabContainer = ContainerUtils.getContainer( draggedTab );
+        final Optional< ContainerIf< ? > > targetTabContainer = ContainerUtils.getContainer( targetTab );
+        if( draggedTabContainer.isEmpty() || targetTabContainer.isEmpty() )
+        {
+            cleanup();
+            return;
+        }
+        final ContainerIf< ? > draggedTabContainerParent = draggedTabContainer.get().getParent();
+        final ContainerIf< ? > targetTabContainerParent = targetTabContainer.get().getParent();
+        if( draggedTabContainerParent == null || targetTabContainerParent == null )
         {
             cleanup();
             return;
         }
 
-        final DropLocation dropLocation =
-            data.dropType == DndTabPaneFactory.DropType.AFTER ? BasicDropLocation.AFTER : BasicDropLocation.BEFORE;
+        if( draggedTabContainerParent != targetTabContainerParent && this.dndService != null
+            && !this.dndService.reparentAllowed( draggedTabContainer.get(), draggedTabContainerParent ) )
+        {
+            cleanup();
+            return;
+        }
+
+        final DropLocation dropLocation = data.dropType == DndTabPaneFactory.DropType.AFTER ?
+            BasicDropLocation.AFTER :
+            BasicDropLocation.BEFORE;
         updateFeedback(
-            new DndFeedbackService.DnDFeedbackData( targetTab.getContent(), draggedTab.getContent(),
-                dropLocation, targetTabParent, data.bounds ) );
+            new DndFeedbackService.DnDFeedbackData( targetTabContainer.get(), draggedTabContainer.get(),
+                dropLocation, targetTabContainerParent, data.bounds ) );
     }
 
     /**

@@ -55,4 +55,24 @@ public interface ContainerIf< N extends Node > extends Serializable
 
     @JsonIgnore
     N getNode();
+
+    @JsonIgnore
+    int getChildrenCount();
+
+    /**
+     * Get the index of the tab inde
+     *
+     * @param aTab
+     *     the tab
+     *
+     * @return the index
+     */
+    int indexOf( ContainerIf< ? > child );
+
+    void addChild( ContainerIf< ? > child );
+
+    void addChild( int index, ContainerIf< ? > child );
+
+    void removeChild( ContainerIf< ? > child );
+
 }

@@ -1,5 +1,8 @@
 package de.psi.pjf.fx.layout;
 
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.scene.layout.Region;
@@ -8,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import de.psi.pjf.fx.layout.container.ContainerConstants;
 import de.psi.pjf.fx.layout.container.ContainerFactoryIf;
 import de.psi.pjf.fx.layout.container.ContainerIf;
 import de.psi.pjf.fx.layout.container.DndStackContainer;
@@ -24,6 +28,8 @@ import de.psi.pjf.fx.layout.container.TabContainerWrapperImpl;
 import de.psi.pjf.fx.layout.dnd.DefaultDndFeedback;
 import de.psi.pjf.fx.layout.dnd.DndFeedbackService;
 import de.psi.pjf.fx.layout.dnd.DndService;
+import de.psi.pjf.fx.layout.dnd.DragData;
+import de.psi.pjf.fx.layout.dnd.DropData;
 import de.psi.pjf.fx.layout.profile.LayoutSerializer;
 import de.psi.pjf.fx.layout.profile.LayoutSerializerIf;
 
@@ -31,7 +37,10 @@ public class LayoutSerializerTest
 {
     private static final DndService dndService = Mockito.mock( DndService.class );
     private static final DndFeedbackService dndFeedbackService = new DefaultDndFeedback();
-    LayoutSerializerIf serializer;
+    private final Consumer< DropData > testDropCallback = aDropData -> {
+    };
+    private final Predicate< DragData > testDragStartCallback = aDropData -> true;
+    private LayoutSerializerIf serializer;
 
     @Before
     public void setUp() throws Exception
@@ -43,6 +52,9 @@ public class LayoutSerializerTest
         values.addValue( DndService.class, dndService );
         values.addValue( DndFeedbackService.class, dndFeedbackService );
         values.addValue( NodeCustomizerServiceIf.class, Mockito.mock( NodeCustomizerServiceIf.class ) );
+        values.addValue( ContainerConstants.SPLIT_DROP_CALLBACK_NAME, testDropCallback );
+        values.addValue( ContainerConstants.TAB_DRAG_START_CALLBACK_NAME, testDragStartCallback );
+        values.addValue( ContainerConstants.TAB_DROP_CALLBACK_NAME, testDropCallback );
         Mockito.when( containerFactory.createObjectMapper() ).thenReturn( mapper );
         serializer = new LayoutSerializer( containerFactory );
     }
@@ -83,7 +95,7 @@ public class LayoutSerializerTest
         final StackContainerIf< ? > stackContainer = new StackContainerImpl();
         final NodeContainer screenWrapper = new NodeContainer( Region::new );
         final TabContainerWrapperIf< ? > tabContainerWrapper = new TabContainerWrapperImpl<>( screenWrapper );
-        stackContainer.add( tabContainerWrapper );
+        stackContainer.addChild( tabContainerWrapper );
         final SplitContainerIf< ? > split = new SplitContainerImpl();
         split.addChild( stackContainer );
         final LayoutContainerIf< ? > layoutContainer = new LayoutContainerImpl( split );
@@ -97,4 +109,19 @@ public class LayoutSerializerTest
         Assert.assertEquals( TabContainerWrapperImpl.class,
             containerIf.getChildren().get( 0 ).getChildren().get( 0 ).getClass() );
     }
+
+    @Test
+    public void testDropCallbackDeserialization() throws Exception
+    {
+        final DndStackContainer dndStackContainer = new DndStackContainer( dndService, dndFeedbackService );
+        dndStackContainer.setSplitDropCallback( testDropCallback );
+        final LayoutContainerIf< ? > layoutContainer = new LayoutContainerImpl( dndStackContainer );
+        final String jsonStr = serializer.toStringValue( layoutContainer );
+        final LayoutContainerIf deserializedLayoutContainer = serializer.fromXml( jsonStr );
+        final ContainerIf mainContainer = deserializedLayoutContainer.getMainContainer();
+        Assert.assertNotNull( mainContainer );
+        final DndStackContainer dndDeserialized = (DndStackContainer)mainContainer;
+        Assert.assertEquals( testDropCallback, dndDeserialized.getSplitDropCallback() );
+    }
+
 }

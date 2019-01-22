@@ -42,6 +42,10 @@ public abstract class AbstractSimpleContainerImpl< N extends Node > implements C
         return nodeCreated;
     }
 
+    protected void postNodeCreation( final Node aNode )
+    {
+    }
+
     @Override
     public final N getNode()
     {
@@ -54,6 +58,7 @@ public abstract class AbstractSimpleContainerImpl< N extends Node > implements C
                 applyCustomizers( node );
             }
             nodeCreated = true;
+            postNodeCreation( node );
         }
         return node;
     }
@@ -112,5 +117,23 @@ public abstract class AbstractSimpleContainerImpl< N extends Node > implements C
     public void setParent( final ContainerIf< ? > aParent )
     {
         parent = aParent;
+    }
+
+    @Override
+    public void addChild( final ContainerIf< ? > child )
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addChild( final int index, final ContainerIf< ? > child )
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void removeChild( final ContainerIf< ? > child )
+    {
+        throw new UnsupportedOperationException();
     }
 }

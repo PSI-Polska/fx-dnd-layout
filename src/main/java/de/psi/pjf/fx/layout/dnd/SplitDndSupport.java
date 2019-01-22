@@ -10,6 +10,9 @@
  *******************************************************************************/
 package de.psi.pjf.fx.layout.dnd;
 
+import java.util.Optional;
+import java.util.function.Consumer;
+
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -18,7 +21,9 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.TransferMode;
 
+import de.psi.pjf.fx.layout.container.ContainerIf;
 import de.psi.pjf.fx.layout.container.ContainerUtils;
+import de.psi.pjf.fx.layout.util.FxUtils;
 
 /**
  * Implementation of splitting with DnD
@@ -26,9 +31,11 @@ import de.psi.pjf.fx.layout.container.ContainerUtils;
  * @param <M>
  *     the domain model type
  */
-public class SplitDndSupport< M extends Node > extends AbstractDndSupport
+public class SplitDndSupport< M extends DndCallbackProviderIf & ContainerIf< ? > > extends AbstractDndSupport
 {
 
+    private static int SPLIT_PADDING = 20;
+    private static int SPLIT_THRESHOLD = 100;
     private final DndService constraintService;
     private final M widget;
 
@@ -62,7 +69,14 @@ public class SplitDndSupport< M extends Node > extends AbstractDndSupport
     @SuppressWarnings( "static-method" )
     public void handleDragExit( DragEvent e )
     {
-        cleanup();
+        try
+        {
+            cleanup();
+        }
+        catch( Throwable ex )
+        {
+            logError( "There was exception in handleDragExit", ex );
+        }
     }
 
     /**
@@ -74,14 +88,21 @@ public class SplitDndSupport< M extends Node > extends AbstractDndSupport
     @SuppressWarnings( "static-method" )
     public void handleDragExit( MouseDragEvent e )
     {
-        cleanup();
+        try
+        {
+            cleanup();
+        }
+        catch( Throwable ex )
+        {
+            logError( "There was exception in handleDragExit", ex );
+        }
     }
 
     private Node findElement( String objectId )
     {
         if( objectId != null )
         {
-            return ContainerUtils.findNodeWithId( widget.getScene().getRoot(), objectId );
+            return FxUtils.findNodeWithId( widget.getNode().getScene().getRoot(), objectId );
         }
         return null;
     }
@@ -94,7 +115,14 @@ public class SplitDndSupport< M extends Node > extends AbstractDndSupport
      */
     public void handleDragOver( EFXDragEvent e )
     {
-        _handleDragOver( e );
+        try
+        {
+            _handleDragOver( e );
+        }
+        catch( Throwable ex )
+        {
+            logError( "There was exception in handleDragOver", ex );
+        }
     }
 
     /**
@@ -105,7 +133,14 @@ public class SplitDndSupport< M extends Node > extends AbstractDndSupport
      */
     public void handleDragOver( DragEvent e )
     {
-        _handleDragOver( e );
+        try
+        {
+            _handleDragOver( e );
+        }
+        catch( Throwable ex )
+        {
+            logError( "There was exception in handleDragOver", ex );
+        }
     }
 
     /**
@@ -116,7 +151,14 @@ public class SplitDndSupport< M extends Node > extends AbstractDndSupport
      */
     public void handleDragDropped( EFXDragEvent e )
     {
-        _handleDragDropped( e );
+        try
+        {
+            _handleDragDropped( e );
+        }
+        catch( Throwable ex )
+        {
+            logError( "There was exception in handleDragDropped", ex );
+        }
     }
 
     /**
@@ -127,7 +169,14 @@ public class SplitDndSupport< M extends Node > extends AbstractDndSupport
      */
     public void handleDragDropped( DragEvent e )
     {
-        _handleDragDropped( e );
+        try
+        {
+            _handleDragDropped( e );
+        }
+        catch( Throwable ex )
+        {
+            logError( "There was exception in handleDragDropped", ex );
+        }
     }
 
     /**
@@ -138,49 +187,63 @@ public class SplitDndSupport< M extends Node > extends AbstractDndSupport
      */
     private void _handleDragOver( Event e )
     {
-
+        if( !DndTabPaneFactory.hasDnDContent( e ) )
+        {
+            cleanup();
+            return;
+        }
         String content = DndTabPaneFactory.getDnDContent( e );
         if( content == null )
         {
+            cleanup();
             return;
         }
-//        System.out.println(content);
         M m = this.widget;
 
         Node findElement = findElement( content );
 
         if( findElement == null )
         {
+            cleanup();
+            return;
+        }
+
+        final Optional< ContainerIf< ? > > containerOpt = ContainerUtils.getContainer( findElement );
+        if( containerOpt.isEmpty() )
+        {
+            cleanup();
+            return;
+        }
+        final ContainerIf< ? > foundContainer = containerOpt.get();
+        if( foundContainer.getParent() == this.widget && this.widget.getChildrenCount() == 1 )
+        {
+            // Cannot split current tab with 1 children
+            cleanup();
             return;
         }
 
         final DropLocation splitType = getSplitType( e );
         if( m != null && this.constraintService != null && !this.constraintService
-            .splitAllowed( m, findElement, splitType ) )
+            .splitAllowed( m, foundContainer, splitType ) )
         {
+            cleanup();
             return;
         }
 
-//        if (this.widget.getDropDroppedCallback() != null) {
-            if (!DndTabPaneFactory.hasDnDContent(e)) {
+        if( this.widget.getSplitDropCallback() != null )
+        {
+            final int childCount = this.widget.getChildrenCount();
+            if( isNotInSplitBounds( e ) && childCount != 0 )
+            {
+                cleanup();
                 return;
             }
-
-//            if (isSplit(e)) {
-//                // Do not support spliting of none tab parts
-//                // if( (MUIElement)m.getParent() instanceof MGenericTile<?> ) {
-//                // e.consume();
-//                // e.acceptTransferModes(TransferMode.MOVE);
-//                // showSplitFeedback();
-//                // }
-//            }
-//            else
-//            {
-                updateFeedback(new DndFeedbackService.DnDFeedbackData(null, null, splitType, m, null));
-                setAcceptTransferModes(e, TransferMode.MOVE);
-                e.consume();
-//            }
-//        }
+            final DropLocation dropLocation = childCount == 0 ? BasicDropLocation.INSERT : splitType;
+            updateFeedback( new DndFeedbackService.DnDFeedbackData( null, null, dropLocation, m,
+                this.widget.getNode().getLayoutBounds() ) );
+            setAcceptTransferModes( e, TransferMode.MOVE );
+            e.consume();
+        }
     }
 
     /**
@@ -191,59 +254,59 @@ public class SplitDndSupport< M extends Node > extends AbstractDndSupport
      */
     private void _handleDragDropped( Event e )
     {
+        M m = this.widget;
 
-        //		M m = this.widget.getDomElement();
-        //
-        //		String content = DndTabPaneFactory.getDnDContent(e);
-        //
-        //		if (content == null) {
-        //			return;
-        //		}
-        //
-        //		MUIElement findElement = findElement(content);
-        //		if (findElement == null) {
-        //			return;
-        //		}
-        //
-        //		if (m != null && this.constraintService != null && !this.constraintService.splitAllowed(m, findElement, getSplitType(e))) {
-        //			return;
-        //		}
-        //
-        //
-        //		WCallback< DropData,  Void> dropDroppedCallback = this.widget.getDropDroppedCallback();
-        //		if (dropDroppedCallback != null) {
-        //			if (!DndTabPaneFactory.hasDnDContent(e)) {
-        //				return;
-        //			}
-        //
-        //			String objectId = DndTabPaneFactory.getDnDContent(e);
-        //
-        //			MUIElement draggedElement = findElement(objectId);
-        //			if (draggedElement == null) {
-        //				return;
-        //			}
-        //
-        //			if (m instanceof MGenericTile<?>) {
-        //				// Tiles are not split
-        //				e.consume();
-        //			} else if (m instanceof MPart && isSplit(e)) {
-        //				e.consume();
-        //				if ((MUIElement) m.getParent() instanceof MPartStack) {
-        //					DropData d = new DropData(screenX(e), screenY(e), this.widget.getDomElement(), draggedElement, getSplitType(e));
-        //					dropDroppedCallback.call(d);
-        //					setDropComplete(e, true);
-        //				}
-        //			} else if (m instanceof MElementContainer<?>) {
-        //				MElementContainer<?> c = (MElementContainer<?>) m;
-        //				if (this.modelService.countRenderableChildren(c) == 0) {
-        //					@SuppressWarnings("all")
-        //					DropData d = new DropData(screenX(e), screenY(e), this.widget.getDomElement(), draggedElement, BasicDropLocation.INSERT);
-        //					dropDroppedCallback.call(d);
-        //					e.consume();
-        //					setDropComplete(e, true);
-        //				}
-        //			}
-        //		}
+        if( !DndTabPaneFactory.hasDnDContent( e ) )
+        {
+            return;
+        }
+        String content = DndTabPaneFactory.getDnDContent( e );
+
+        if( content == null )
+        {
+            return;
+        }
+
+        Node findElement = findElement( content );
+
+        if( findElement == null )
+        {
+            return;
+        }
+
+        final Optional< ContainerIf< ? > > containerOpt = ContainerUtils.getContainer( findElement );
+        if( containerOpt.isEmpty() )
+        {
+            return;
+        }
+        final ContainerIf< ? > foundContainer = containerOpt.get();
+        if( foundContainer.getParent() == this.widget && this.widget.getChildrenCount() == 1 )
+        {
+            // Cannot split current tab with 1 children
+            return;
+        }
+
+        final DropLocation splitType = getSplitType( e );
+        if( m != null && this.constraintService != null && !this.constraintService
+            .splitAllowed( m, foundContainer, splitType ) )
+        {
+            return;
+        }
+        final Consumer< DropData > dropDroppedCallback = this.widget.getSplitDropCallback();
+        if( dropDroppedCallback != null )
+        {
+            final int childCount = this.widget.getChildrenCount();
+            if( isNotInSplitBounds( e ) && childCount != 0 )
+            {
+                return;
+            }
+            final DropLocation dropLocation = childCount == 0 ? BasicDropLocation.INSERT : splitType;
+            final DropData d =
+                new DropData( screenX( e ), screenY( e ), this.widget, foundContainer, dropLocation );
+            dropDroppedCallback.accept( d );
+            e.consume();
+            setDropComplete( e, true );
+        }
     }
 
     @SuppressWarnings( "all" )
@@ -269,6 +332,49 @@ public class SplitDndSupport< M extends Node > extends AbstractDndSupport
         }
 
         return BasicDropLocation.SPLIT_BOTTOM;
+    }
+
+    private SplitAreas calculateSplitAreas()
+    {
+        Bounds bounds = this.widget.getNode().getBoundsInLocal();
+        Bounds leftSplit =
+            new BoundingBox( bounds.getMinX(), bounds.getMinY(), SPLIT_THRESHOLD, bounds.getHeight() );
+        Bounds rightSplit =
+            new BoundingBox( bounds.getMaxX() - SPLIT_THRESHOLD, bounds.getMinY(), SPLIT_THRESHOLD,
+                bounds.getHeight() );
+
+        Bounds topSplit = new BoundingBox( bounds.getMinX() + SPLIT_THRESHOLD, bounds.getMinY(),
+            bounds.getWidth() - 2 * SPLIT_THRESHOLD, SPLIT_THRESHOLD );
+        Bounds bottomSplit =
+            new BoundingBox( bounds.getMinX() + SPLIT_THRESHOLD, bounds.getMaxY() - SPLIT_THRESHOLD,
+                bounds.getWidth() - 2 * SPLIT_THRESHOLD, SPLIT_THRESHOLD );
+
+        return new SplitAreas( leftSplit, rightSplit, topSplit, bottomSplit );
+    }
+
+    private boolean isNotInSplitBounds( Event e )
+    {
+        Bounds boundsInLocal = this.widget.getNode().getBoundsInLocal();
+        boundsInLocal = new BoundingBox( boundsInLocal.getMinX() + SPLIT_THRESHOLD,
+            boundsInLocal.getMinY() + SPLIT_THRESHOLD,
+            Math.max( 0, boundsInLocal.getWidth() - SPLIT_THRESHOLD * 2 ),
+            Math.max( 0, boundsInLocal.getHeight() - SPLIT_THRESHOLD * 2 ) );
+        return boundsInLocal.contains( x( e ), y( e ) );
+    }
+
+    public void install()
+    {
+        widget.getNode().addEventHandler( DragEvent.DRAG_OVER, this::handleDragOver );
+        widget.getNode().addEventHandler( DragEvent.DRAG_EXITED, this::handleDragExit );
+        widget.getNode().addEventHandler( DragEvent.DRAG_DROPPED, this::handleDragDropped );
+
+        widget.getNode().addEventHandler( EFXDragEvent.DRAG_OVER, this::handleDragOver );
+        //		widget.addEventHandler(EFXDragEvent.DRAG_EXITED, dndSupport::handleDragExit);
+        widget.getNode().addEventHandler( EFXDragEvent.DRAG_DROPPED, this::handleDragDropped );
+        if( StackDndSupport.DETACHABLE_DRAG )
+        {
+            widget.getNode().addEventHandler( MouseDragEvent.MOUSE_DRAG_EXITED, this::handleDragExit );
+        }
     }
 
     private static double x( Event e )
@@ -325,39 +431,6 @@ public class SplitDndSupport< M extends Node > extends AbstractDndSupport
         {
             ( (DragEvent)e ).acceptTransferModes( mode );
         }
-    }
-
-    private SplitAreas calculateSplitAreas()
-    {
-        Bounds bounds = ( (Node)this.widget ).getBoundsInLocal();
-
-        double hSplitWidth = ( bounds.getWidth() - SPLIT_PADDING * 2 ) / 5;
-        double hSplitHeight = bounds.getHeight() - SPLIT_PADDING * 2;
-
-        double vSplitWidth = bounds.getWidth() - SPLIT_PADDING * 2;
-        double vSplitHeight = ( bounds.getHeight() - SPLIT_PADDING * 2 ) / 2;
-
-        Bounds leftSplit = new BoundingBox( SPLIT_PADDING, SPLIT_PADDING, hSplitWidth, hSplitHeight );
-        Bounds rightSplit =
-            new BoundingBox( bounds.getWidth() - SPLIT_PADDING - hSplitWidth, SPLIT_PADDING, hSplitWidth,
-                hSplitHeight );
-
-        Bounds topSplit = new BoundingBox( SPLIT_PADDING, SPLIT_PADDING, vSplitWidth, vSplitHeight );
-        Bounds bottomSplit =
-            new BoundingBox( SPLIT_PADDING, SPLIT_PADDING + vSplitHeight, vSplitWidth, vSplitHeight );
-
-        return new SplitAreas( leftSplit, rightSplit, topSplit, bottomSplit );
-    }
-
-    private static int SPLIT_PADDING = 20;
-
-    private boolean isSplit( Event e )
-    {
-        Bounds boundsInLocal = ( (Node)this.widget ).getBoundsInLocal();
-        boundsInLocal =
-            new BoundingBox( boundsInLocal.getMinX() + SPLIT_PADDING, boundsInLocal.getMinY() + SPLIT_PADDING,
-                boundsInLocal.getWidth() - SPLIT_PADDING * 2, boundsInLocal.getHeight() - SPLIT_PADDING * 2 );
-        return boundsInLocal.contains( x( e ), y( e ) );
     }
 
     private static class SplitAreas

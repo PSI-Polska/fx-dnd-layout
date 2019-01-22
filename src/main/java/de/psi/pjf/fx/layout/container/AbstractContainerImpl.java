@@ -48,4 +48,58 @@ public abstract class AbstractContainerImpl< N extends Node, T extends Container
         return childrenUnmodifiable;
     }
 
+    @Override
+    public int getChildrenCount()
+    {
+        return children.size();
+    }
+
+    @Override
+    public void addChild( final ContainerIf< ? > child )
+    {
+        children.add( (T)child );
+        child.setParent( this );
+        if( isNodeCreated() )
+        {
+            addChildFx( child );
+        }
+    }
+
+    protected abstract void addChildFx( final ContainerIf< ? > child );
+
+    protected abstract void addChildFx( final int index, final ContainerIf< ? > child );
+
+    protected abstract void removeChildFx( final ContainerIf< ? > child );
+
+    @Override
+    public int indexOf( final ContainerIf< ? > child )
+    {
+        return children.indexOf( child );
+    }
+
+    @Override
+    public void addChild( int index, final ContainerIf< ? > child )
+    {
+        children.add( index, (T)child );
+        child.setParent( this );
+        if( isNodeCreated() )
+        {
+            addChildFx( index, child );
+        }
+    }
+
+    @Override
+    public void removeChild( final ContainerIf< ? > child )
+    {
+        if( !children.remove( child ) )
+        {
+            return;
+        }
+        child.setParent( null );
+        if( isNodeCreated() )
+        {
+            removeChildFx( child );
+        }
+    }
+
 }

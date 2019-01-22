@@ -10,7 +10,7 @@
  *******************************************************************************/
 package de.psi.pjf.fx.layout.dnd;
 
-import javafx.scene.Node;
+import de.psi.pjf.fx.layout.container.ContainerIf;
 
 /**
  * Service to constraint drag and drop operations
@@ -29,7 +29,7 @@ public interface DndService
      *
      * @return <code>true</code> if a split is allowed
      */
-    public boolean splitAllowed( Node element, Node sourceElement, DropLocation dropType );
+    boolean splitAllowed( ContainerIf< ? > element, ContainerIf< ? > sourceElement, DropLocation dropType );
 
     /**
      * Check if a detach is allowed
@@ -39,7 +39,7 @@ public interface DndService
      *
      * @return <code>true</code> if a detach is allowed
      */
-    public boolean detachAllowed( Node element );
+    boolean detachAllowed( ContainerIf< ? > element );
 
     /**
      * Check if reordering is allowed
@@ -53,7 +53,8 @@ public interface DndService
      *
      * @return <code>true</code> if a drop is allowed there
      */
-    public boolean reorderAllowed( Node reference, Node sourceElement, DropLocation dropLocation );
+    boolean reorderAllowed( ContainerIf< ? > reference, ContainerIf< ? > sourceElement,
+        DropLocation dropLocation );
 
     /**
      * Check if a insert is allowed
@@ -65,7 +66,7 @@ public interface DndService
      *
      * @return <code>true</code> if a drop is allowed there
      */
-    public boolean insertAllowed( Node reference, Node sourceElement );
+    boolean insertAllowed( ContainerIf< ? > reference, ContainerIf< ? > sourceElement );
 
     /**
      * Check if we can reparent the element
@@ -77,7 +78,7 @@ public interface DndService
      *
      * @deprecated
      */
-    public default boolean repartentAllowed( Node element )
+    default boolean repartentAllowed( ContainerIf< ? > element )
     {
         return true;
     }
@@ -90,7 +91,7 @@ public interface DndService
      *
      * @return <code>true</code> if a reparent is allowed
      */
-    public default boolean reparentAllowed( Node element, Node reference )
+    default boolean reparentAllowed( ContainerIf< ? > element, ContainerIf< ? > reference )
     {
         return repartentAllowed( element );
     }
@@ -110,7 +111,7 @@ public interface DndService
      * @return <code>true</code> if detaching is handled or <code>false</code>
      * if the default should be used
      */
-    public boolean handleDetach( double x, double y, Node sourceElement );
+    boolean handleDetach( double x, double y, ContainerIf< ? > sourceElement );
 
     /**
      * Handle the reordering
@@ -125,7 +126,8 @@ public interface DndService
      * @return <code>true</code> if handled or <code>false</code> if the default
      * should be used
      */
-    public boolean handleReorder( Node reference, Node sourceElement, DropLocation dropLocation );
+    boolean handleReorder( ContainerIf< ? > reference, ContainerIf< ? > sourceElement,
+        DropLocation dropLocation );
 
     /**
      * Handle the insert
@@ -138,7 +140,7 @@ public interface DndService
      * @return <code>true</code> if handled or <code>false</code> if the default
      * should be used
      */
-    public boolean handleInsert( Node reference, Node sourceElement );
+    boolean handleInsert( ContainerIf< ? > reference, ContainerIf< ? > sourceElement );
 
     /**
      * Handle the split
@@ -153,7 +155,8 @@ public interface DndService
      * @return <code>true</code> if handled or <code>false</code> if the default
      * should be used
      */
-    public boolean handleSplit( Node reference, Node sourceElement, DropLocation dropLocation );
+    boolean handleSplit( ContainerIf< ? > reference, ContainerIf< ? > sourceElement,
+        DropLocation dropLocation );
 
     /**
      * Check if the element can be dragged at all
@@ -167,7 +170,7 @@ public interface DndService
      *
      * @since 2.2.0
      */
-    public default boolean dragAllowed( Node container, Node element )
+    default boolean dragAllowed( ContainerIf< ? > container, ContainerIf< ? > element )
     {
         return true;
     }

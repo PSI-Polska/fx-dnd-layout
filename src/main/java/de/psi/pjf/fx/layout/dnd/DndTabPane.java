@@ -20,8 +20,8 @@ import javafx.scene.control.Skin;
 import javafx.scene.control.SkinBase;
 import javafx.scene.control.TabPane;
 
-import de.psi.pjf.fx.layout.skin.DnDTabPaneSkinHookerFullDrag;
-import de.psi.pjf.fx.layout.skin.DndTabPaneSkinHooker;
+import de.psi.pjf.fx.layout.dnd.skin.DnDTabPaneSkinHookerFullDrag;
+import de.psi.pjf.fx.layout.dnd.skin.DndTabPaneSkinHooker;
 
 /**
  * A TabPane with Drag and Drop Support
@@ -151,7 +151,7 @@ public class DndTabPane extends TabPane
      */
     public boolean isAllowDetach()
     {
-        return this.allowDetach != null ? this.allowDetach.get() : false;
+        return this.allowDetach != null && this.allowDetach.get();
     }
 
     /**

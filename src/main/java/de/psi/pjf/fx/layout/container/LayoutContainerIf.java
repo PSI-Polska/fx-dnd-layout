@@ -8,11 +8,14 @@
 
 package de.psi.pjf.fx.layout.container;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.scene.layout.BorderPane;
 
 /**
@@ -27,6 +30,12 @@ public interface LayoutContainerIf< N extends BorderPane > extends ContainerIf< 
 {
 
     @JsonIgnore
+    ReadOnlyObjectProperty< ContainerIf< ? > > focusedContainerProperty();
+
+    @JsonIgnore
+    ContainerIf< ? > getFocusedContainer();
+
+    @JsonIgnore
     ContainerIf< ? > getContainerById( String id );
 
     @JsonIgnore
@@ -36,4 +45,7 @@ public interface LayoutContainerIf< N extends BorderPane > extends ContainerIf< 
 
     void setMainContainer( ContainerIf< ? > aMainContainer );
 
+    void dispose();
+
+    Map< Object, Object > getProperties();
 }

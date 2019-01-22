@@ -22,6 +22,9 @@ public final class ContainerConstants
     public static final String SCREEN_CONTAINER_WRAPPER_TYPE_NAME = "screenContainerWrapper";
     public static final String TAB_CONTAINER_WRAPPER_TYPE_NAME = "tabContainerWrapper";
     public static final String LAYOUT_CONTAINER_TYPE_NAME = "layoutContainer";
+    public static final String SPLIT_DROP_CALLBACK_NAME = "splitDropCallback";
+    public static final String TAB_DRAG_START_CALLBACK_NAME = "tabDragStartCallback";
+    public static final String TAB_DROP_CALLBACK_NAME = "tabDropCallback";
 
     private ContainerConstants()
     {

@@ -8,6 +8,7 @@
 
 package de.psi.pjf.fx.layout.container;
 
+import javafx.geometry.Orientation;
 import javafx.scene.control.SplitPane;
 
 /**
@@ -17,11 +18,11 @@ import javafx.scene.control.SplitPane;
  */
 public interface SplitContainerIf< N extends SplitPane > extends ContainerIf< N >
 {
-    void addChild( ContainerIf< ? > child );
-
-    void addChild( int index, ContainerIf< ? > child );
-
     void setDividerPositions( double... aV );
 
     double[] getDividerPositions();
+
+    Orientation getOrientation();
+
+    void setOrientation( Orientation aOrientation );
 }

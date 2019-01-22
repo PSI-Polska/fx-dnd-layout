@@ -20,11 +20,11 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.transform.Rotate;
 
-import de.psi.pjf.fx.layout.container.ContainerUtils;
 import de.psi.pjf.fx.layout.dnd.markers.AreaOverlay;
 import de.psi.pjf.fx.layout.dnd.markers.AreaOverlay.Area;
 import de.psi.pjf.fx.layout.dnd.markers.PositionMarker;
 import de.psi.pjf.fx.layout.dnd.markers.TabOutlineMarker;
+import de.psi.pjf.fx.layout.util.FxUtils;
 
 /**
  * Feedback for DnD
@@ -35,18 +35,16 @@ public class DefaultDndFeedback implements DndFeedbackService
     @Override
     public MarkerFeedback showFeedback( DnDFeedbackData data )
     {
-        final Node widget = data.feedbackContainerElement;
-        final Node sourceElement = data.sourceElement;
-        if( data.dropType == BasicDropLocation.SPLIT_BOTTOM || data.dropType == BasicDropLocation.SPLIT_TOP
-            || data.dropType == BasicDropLocation.SPLIT_RIGHT
-            || data.dropType == BasicDropLocation.SPLIT_LEFT )
+        final Node widget = data.feedbackContainerElement.getNode();
+        if( data.dropType.isSplit() )
         {
-            final Pane pane = (Pane)ContainerUtils.findAscendantInclusively( widget, Pane.class::isInstance );
+            final Pane pane = (Pane)FxUtils.findAscendantInclusively( widget, Pane.class::isInstance );
             return handleSplit( pane, data );
         }
-        else if( widget instanceof TabPane )
+        else if( data.dropType.isReorder() && widget instanceof TabPane )
         {
-            if( ContainerUtils.findAscendantInclusively( sourceElement, node -> node == widget ) != null )
+            final Node sourceElement = data.sourceElement == null ? null : data.sourceElement.getNode();
+            if( FxUtils.findAscendantInclusively( sourceElement, node -> node == widget ) != null )
             {
                 return handleReorder( (TabPane)widget, data );
             }

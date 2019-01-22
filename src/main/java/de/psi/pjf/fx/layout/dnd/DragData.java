@@ -10,7 +10,7 @@
  *******************************************************************************/
 package de.psi.pjf.fx.layout.dnd;
 
-import javafx.scene.Node;
+import de.psi.pjf.fx.layout.container.ContainerIf;
 
 /**
  * Drag data
@@ -20,11 +20,11 @@ public class DragData
     /**
      * The stack
      */
-    public final Node container;
+    public final ContainerIf< ? > container;
     /**
      * The item
      */
-    public final Node item;
+    public final ContainerIf< ? > item;
 
     /**
      * Create a new drag data instance
@@ -34,7 +34,7 @@ public class DragData
      * @param item
      *     the item
      */
-    public DragData( Node container, Node item )
+    public DragData( ContainerIf< ? > container, ContainerIf< ? > item )
     {
         this.container = container;
         this.item = item;

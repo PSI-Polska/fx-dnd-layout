@@ -8,7 +8,7 @@
  * Contributors:
  *     Tom Schindl<tom.schindl@bestsolution.at> - initial API and implementation
  *******************************************************************************/
-package de.psi.pjf.fx.layout.skin;
+package de.psi.pjf.fx.layout.dnd.skin;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -35,9 +35,9 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 
-import de.psi.pjf.fx.layout.dnd.DndTabPaneFactory;
-import de.psi.pjf.fx.layout.container.TabContainerWrapperIf;
 import de.psi.pjf.fx.layout.container.ContainerUtils;
+import de.psi.pjf.fx.layout.container.TabContainerWrapperIf;
+import de.psi.pjf.fx.layout.dnd.DndTabPaneFactory;
 
 /**
  * Create a hooker who use native DnD

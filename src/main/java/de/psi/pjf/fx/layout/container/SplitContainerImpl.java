@@ -8,6 +8,7 @@
 
 package de.psi.pjf.fx.layout.container;
 
+import javafx.geometry.Orientation;
 import javafx.scene.control.SplitPane;
 
 /**
@@ -20,22 +21,20 @@ public class SplitContainerImpl extends AbstractContainerImpl< SplitPane, Contai
 {
 
     private double[] dividerPositions;
+    private Orientation orientation;
 
     public SplitContainerImpl()
     {
     }
 
-//    @JsonCreator
-//    private SplitContainerImpl(
-//        @JsonProperty( value = "children" ) final List< ContainerIf< ? > > aChildren )
-//    {
-//        super( aChildren );
-//    }
-
     @Override
     protected SplitPane createNode()
     {
         final SplitPane splitPane = new SplitPane();
+        if( orientation != null )
+        {
+            splitPane.setOrientation( orientation );
+        }
         if( dividerPositions != null )
         {
             splitPane.setDividerPositions( dividerPositions );
@@ -48,25 +47,21 @@ public class SplitContainerImpl extends AbstractContainerImpl< SplitPane, Contai
     }
 
     @Override
-    public void addChild( final ContainerIf< ? > child )
+    protected void addChildFx( final ContainerIf< ? > child )
     {
-        getChildrenInternal().add( child );
-        child.setParent( this );
-        if( isNodeCreated() )
-        {
-            getNode().getItems().add( child.getNode() );
-        }
+        getNode().getItems().add( child.getNode() );
     }
 
     @Override
-    public void addChild( int index, final ContainerIf< ? > child )
+    protected void addChildFx( final int index, final ContainerIf< ? > child )
     {
-        getChildrenInternal().add( index, child );
-        child.setParent( this );
-        if( isNodeCreated() )
-        {
-            getNode().getItems().add( index, child.getNode() );
-        }
+        getNode().getItems().add( index, child.getNode() );
+    }
+
+    @Override
+    protected void removeChildFx( final ContainerIf< ? > child )
+    {
+        getNode().getItems().remove( child.getNode() );
     }
 
     @Override
@@ -84,8 +79,30 @@ public class SplitContainerImpl extends AbstractContainerImpl< SplitPane, Contai
     {
         if( isNodeCreated() )
         {
-            return getNode().getDividerPositions();
+            return getNode()
+                .getDividerPositions(); // FIXME pkruszczynski 21.01.2019: to check if taken on serialization
         }
         return dividerPositions;
+    }
+
+    @Override
+    public Orientation getOrientation()
+    {
+        if( isNodeCreated() )
+        {
+            return getNode()
+                .getOrientation(); // FIXME pkruszczynski 21.01.2019: to check if taken on serialization
+        }
+        return orientation;
+    }
+
+    @Override
+    public void setOrientation( final Orientation aOrientation )
+    {
+        orientation = aOrientation;
+        if( isNodeCreated() )
+        {
+            getNode().setOrientation( orientation );
+        }
     }
 }

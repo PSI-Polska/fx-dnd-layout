@@ -8,6 +8,8 @@
 
 package de.psi.pjf.fx.layout.container;
 
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import com.fasterxml.jackson.databind.InjectableValues;
@@ -16,9 +18,10 @@ import javafx.scene.Node;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TabPane;
 
-import de.psi.pjf.fx.layout.dnd.DefaultDndFeedback;
 import de.psi.pjf.fx.layout.dnd.DndFeedbackService;
 import de.psi.pjf.fx.layout.dnd.DndService;
+import de.psi.pjf.fx.layout.dnd.DragData;
+import de.psi.pjf.fx.layout.dnd.DropData;
 
 /**
  * @author created: pkruszczynski on 14.01.2019 12:16
@@ -28,18 +31,17 @@ import de.psi.pjf.fx.layout.dnd.DndService;
 public class ContainerFactory implements ContainerFactoryIf
 {
 
-    private final DndService dndService;
-    private final DndFeedbackService dndFeedback;
+    private DndService dndService;
+    private DndFeedbackService dndFeedback;
 
-    public ContainerFactory( final DndService aDndService, final DndFeedbackService aDndFeedback )
+    public void setDndService( final DndService aDndService )
     {
         dndService = aDndService;
-        dndFeedback = aDndFeedback;
     }
 
-    public ContainerFactory( final DndService aDndService )
+    public void setDndFeedback( final DndFeedbackService aDndFeedback )
     {
-        this( aDndService, new DefaultDndFeedback() );
+        dndFeedback = aDndFeedback;
     }
 
     @Override
@@ -51,7 +53,11 @@ public class ContainerFactory implements ContainerFactoryIf
     @Override
     public StackContainerIf< TabPane > createDndStackContainer()
     {
-        return new DndStackContainer( dndService, dndFeedback );
+        final DndStackContainer dndStackContainer = new DndStackContainer( dndService, dndFeedback );
+        dndStackContainer.setSplitDropCallback( createSplitDropCallback() );
+        dndStackContainer.setTabDropCallback( createTabDropCallBack() );
+        dndStackContainer.setTabDragStartCallback( createTabDragStartCallback() );
+        return dndStackContainer;
     }
 
     @Override
@@ -87,7 +93,47 @@ public class ContainerFactory implements ContainerFactoryIf
         mapper.setInjectableValues( values );
         values.addValue( DndService.class, dndService );
         values.addValue( DndFeedbackService.class, dndFeedback );
+        values.addValue( ContainerConstants.SPLIT_DROP_CALLBACK_NAME, createSplitDropCallback() );
+        values.addValue( ContainerConstants.TAB_DROP_CALLBACK_NAME, createTabDropCallBack() );
+        values.addValue( ContainerConstants.TAB_DRAG_START_CALLBACK_NAME, createTabDragStartCallback() );
         return mapper;
+    }
+
+    protected Consumer< DropData > createSplitDropCallback()
+    {
+        return aDropData -> {
+            if( aDropData.dropType.isSplit() )
+            {
+                dndService.handleSplit( aDropData.reference, aDropData.sourceElement, aDropData.dropType );
+            }
+            else if( aDropData.dropType.isInsert() )
+            {
+                dndService.handleInsert( aDropData.reference, aDropData.sourceElement );
+            }
+            else
+            {
+                throw new IllegalStateException( "Unsupported drop type" );
+            }
+        };
+    }
+
+    protected Consumer< DropData > createTabDropCallBack()
+    {
+        return aDropData -> {
+            if( aDropData.dropType.isReorder() )
+            {
+                dndService.handleReorder( aDropData.reference, aDropData.sourceElement, aDropData.dropType );
+            }
+            else
+            {
+                throw new IllegalStateException( "Unsupported drop type" );
+            }
+        };
+    }
+
+    protected Predicate< DragData > createTabDragStartCallback()
+    {
+        return d -> dndService.dragAllowed( d.container, d.item );
     }
 
 }

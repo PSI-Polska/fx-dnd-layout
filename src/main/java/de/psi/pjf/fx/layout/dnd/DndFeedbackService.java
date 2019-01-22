@@ -11,7 +11,8 @@
 package de.psi.pjf.fx.layout.dnd;
 
 import javafx.geometry.Bounds;
-import javafx.scene.Node;
+
+import de.psi.pjf.fx.layout.container.ContainerIf;
 
 /**
  * Service that needs to be implemented to provide feedback for drag and drop
@@ -19,18 +20,28 @@ import javafx.scene.Node;
 public interface DndFeedbackService
 {
     /**
+     * Show feedback
+     *
+     * @param data
+     *     the feedback data
+     *
+     * @return the marker
+     */
+    MarkerFeedback showFeedback( DnDFeedbackData data );
+
+    /**
      * Feedback data
      */
-    public static class DnDFeedbackData
+    class DnDFeedbackData
     {
         /**
          * The reference element currently dragged over
          */
-        public final Node reference;
+        public final ContainerIf< ? > reference;
         /**
          * The dragged element
          */
-        public final Node sourceElement;
+        public final ContainerIf< ? > sourceElement;
         /**
          * The drop type
          */
@@ -39,7 +50,7 @@ public interface DndFeedbackService
         /**
          * The container to show the feedback on
          */
-        public final Node feedbackContainerElement;
+        public final ContainerIf< ? > feedbackContainerElement;
         /**
          * The region of the reference element
          */
@@ -59,8 +70,8 @@ public interface DndFeedbackService
          * @param containerRegion
          *     the region of the reference element
          */
-        public DnDFeedbackData( Node reference, Node sourceElement, DropLocation dropType,
-            Node feedbackContainerElement, Bounds containerRegion )
+        public DnDFeedbackData( ContainerIf< ? > reference, ContainerIf< ? > sourceElement,
+            DropLocation dropType, ContainerIf< ? > feedbackContainerElement, Bounds containerRegion )
         {
             this.reference = reference;
             this.sourceElement = sourceElement;
@@ -141,23 +152,19 @@ public interface DndFeedbackService
             }
             if( this.sourceElement == null )
             {
-                if( other.sourceElement != null )
-                {
-                    return false;
-                }
+                return other.sourceElement == null;
             }
-            else if( !this.sourceElement.equals( other.sourceElement ) )
+            else
             {
-                return false;
+                return this.sourceElement.equals( other.sourceElement );
             }
-            return true;
         }
     }
 
     /**
      * Marker feedback
      */
-    public abstract static class MarkerFeedback
+    abstract class MarkerFeedback
     {
         /**
          * The feedback data
@@ -180,14 +187,4 @@ public interface DndFeedbackService
          */
         public abstract void hide();
     }
-
-    /**
-     * Show feedback
-     *
-     * @param data
-     *     the feedback data
-     *
-     * @return the marker
-     */
-    public MarkerFeedback showFeedback( DnDFeedbackData data );
 }

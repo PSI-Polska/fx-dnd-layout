@@ -55,4 +55,16 @@ public class NodeContainer extends AbstractSimpleContainerImpl< Node >
     {
         return Collections.emptyList();
     }
+
+    @Override
+    public int getChildrenCount()
+    {
+        return 0;
+    }
+
+    @Override
+    public int indexOf( final ContainerIf< ? > child )
+    {
+        return -1;
+    }
 }

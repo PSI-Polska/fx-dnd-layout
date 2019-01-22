@@ -8,7 +8,7 @@
  * Contributors:
  *     Tom Schindl<tom.schindl@bestsolution.at> - initial API and implementation
  *******************************************************************************/
-package de.psi.pjf.fx.layout.skin;
+package de.psi.pjf.fx.layout.dnd.skin;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -34,10 +34,10 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
 
-import de.psi.pjf.fx.layout.dnd.DndTabPaneFactory;
-import de.psi.pjf.fx.layout.container.TabContainerWrapperIf;
-import de.psi.pjf.fx.layout.dnd.EFXDragEvent;
 import de.psi.pjf.fx.layout.container.ContainerUtils;
+import de.psi.pjf.fx.layout.container.TabContainerWrapperIf;
+import de.psi.pjf.fx.layout.dnd.DndTabPaneFactory;
+import de.psi.pjf.fx.layout.dnd.EFXDragEvent;
 import de.psi.pjf.fx.layout.util.Util;
 
 /**

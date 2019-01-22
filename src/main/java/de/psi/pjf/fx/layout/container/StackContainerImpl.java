@@ -10,19 +10,18 @@ package de.psi.pjf.fx.layout.container;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.TransformationList;
 import javafx.geometry.Side;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+
+import de.psi.pjf.fx.layout.util.FxUtils;
+import de.psi.pjf.fx.layout.util.SelectedTabFocuser;
 
 /**
  * @author created: pkruszczynski on 14.01.2019 12:19
@@ -37,6 +36,7 @@ public class StackContainerImpl extends AbstractContainerImpl< TabPane, TabConta
         Collections.unmodifiableList( getChildrenInternal() );
     private TabContainerWrapperIf< ? > selectedTab;
     private Side side;
+    private boolean localChange = false;
 
     protected TabPane createTabPane()
     {
@@ -51,7 +51,14 @@ public class StackContainerImpl extends AbstractContainerImpl< TabPane, TabConta
         {
             tabPane.setSide( side );
         }
+        final List< Tab > tabsToBeSet = getChildrenInternal().stream().map( TabContainerWrapperIf::getTab )
+            .collect( Collectors.toList() );
+        tabPane.getTabs().setAll( tabsToBeSet );
         tabPane.getTabs().addListener( (ListChangeListener< ? super Tab >)aChange -> {
+            if( localChange )
+            {
+                return;
+            }
             while( aChange.next() )
             {
                 aChange.getRemoved().stream().map( ContainerUtils::getContainer ).flatMap( Optional::stream )
@@ -63,12 +70,16 @@ public class StackContainerImpl extends AbstractContainerImpl< TabPane, TabConta
                 getChildrenInternal().addAll( aChange.getFrom(), addedTabWrappers );
             }
         } );
-        final List< Tab > tabsToBeSet = getChildrenInternal().stream().map( TabContainerWrapperIf::getTab )
-            .collect( Collectors.toList() );
-        tabPane.getTabs().setAll( tabsToBeSet );
         if( selectedTab != null )
         {
             tabPane.getSelectionModel().select( selectedTab.getTab() );
+            FxUtils.executeOnceWhenPropertyIsNonNull( selectedTab.getNode().sceneProperty(),
+                $ -> selectedTab.getNode().requestFocus() );
+        }
+        else
+        {
+            selectedTab = Optional.ofNullable( tabPane.getSelectionModel().getSelectedItem() )
+                .flatMap( ContainerUtils::< TabContainerWrapperIf< ? > >getContainer ).orElse( null );
         }
         tabPane.getSelectionModel().selectedItemProperty()
             .addListener( ( observable, oldValue, newValue ) -> {
@@ -82,59 +93,15 @@ public class StackContainerImpl extends AbstractContainerImpl< TabPane, TabConta
                     selectedTab = null;
                 }
             } );
+        final SelectedTabFocuser selectedTabFocuser =
+            new SelectedTabFocuser( () -> selectedTab == null ? null : selectedTab.getNode() );
+        selectedTabFocuser.install( tabPane );
         return tabPane;
-    }
-
-    @Override
-    public int indexOf( final TabContainerWrapperIf< ? > aTab )
-    {
-        return getChildrenInternal().indexOf( aTab );
-    }
-
-    @Override
-    public boolean remove( final TabContainerWrapperIf< ? > aTab )
-    {
-        if( isNodeCreated() )
-        {
-            return getNode().getTabs().remove( aTab.getTab() );
-        }
-        else
-        {
-            return getChildrenInternal().remove( aTab );
-        }
-    }
-
-    @Override
-    public void add( final TabContainerWrapperIf< ? > aTab )
-    {
-        aTab.setParent( this );
-        if( isNodeCreated() )
-        {
-            getNode().getTabs().add( aTab.getTab() );
-        }
-        else
-        {
-            getChildrenInternal().add( aTab );
-        }
-    }
-
-    @Override
-    public void add( final int index, final TabContainerWrapperIf< ? > aTab )
-    {
-        aTab.setParent( this );
-        if( isNodeCreated() )
-        {
-            getNode().getTabs().add( index, aTab.getTab() );
-        }
-        else
-        {
-            getChildrenInternal().add( index, aTab );
-        }
     }
 
     @JsonIgnore
     @Override
-    public int getTabNumber()
+    public int getTabCount()
     {
         return getChildrenInternal().size();
     }
@@ -145,11 +112,19 @@ public class StackContainerImpl extends AbstractContainerImpl< TabPane, TabConta
         if( isNodeCreated() )
         {
             getNode().getSelectionModel().select( aTab.getTab() );
+            FxUtils.executeOnceWhenPropertyIsNonNull( selectedTab.getNode().sceneProperty(),
+                $ -> selectedTab.getNode().requestFocus() );
         }
         else
         {
             selectedTab = aTab;
         }
+    }
+
+    @Override
+    public TabContainerWrapperIf< ? > getSelectedTab()
+    {
+        return selectedTab;
     }
 
     @JsonIgnore
@@ -164,103 +139,64 @@ public class StackContainerImpl extends AbstractContainerImpl< TabPane, TabConta
         return getNode().getTabs().stream().filter( aMatcher ).findAny();
     }
 
-    private class MappingTransformationList< S, T > extends TransformationList< T, S >
+    @Override
+    protected void addChildFx( final ContainerIf< ? > child )
     {
-
-        private final Function< S, T > mappingFunction;
-
-        public MappingTransformationList( final ObservableList< ? extends S > aObservableList,
-            final Function< S, T > mappingFunction )
+        if( !( child instanceof TabContainerWrapperIf ) )
         {
-            super( aObservableList );
-            this.mappingFunction = Objects.requireNonNull( mappingFunction );
+            throw new IllegalStateException();
         }
-
-        private List< T > getRemovedElements( ListChangeListener.Change< ? extends S > c )
+        try
         {
-            return convertToTarget( c.getRemoved() );
+            localChange = true;
+            getNode().getTabs().add( ( (TabContainerWrapperIf< ? >)child ).getTab() );
         }
-
-        @Override
-        protected void sourceChanged( final ListChangeListener.Change< ? extends S > c )
+        finally
         {
-            beginChange();
-
-            while( c.next() )
-            {
-                if( c.wasReplaced() )
-                {
-                    List< ? extends S > removed = c.getRemoved();
-                    List< ? extends S > added = c.getAddedSubList();
-                    if( !removed.equals( added ) )
-                    {
-                        nextReplace( c.getFrom(), c.getTo(), convertToTarget( removed ) );
-                    }
-                }
-                else if( c.wasAdded() )
-                {
-                    nextAdd( c.getFrom(), c.getTo() );
-                }
-                else if( c.wasRemoved() )
-                {
-                    int removedSize = c.getRemovedSize();
-                    if( removedSize == 1 )
-                    {
-                        nextRemove( c.getFrom(), getRemovedElements( c ).get( 0 ) );
-                    }
-                    else
-                    {
-                        nextRemove( c.getFrom(), getRemovedElements( c ) );
-                    }
-                }
-                else if( c.wasPermutated() )
-                {
-                    int[] permutation = new int[ size() ];
-                    for( int i = 0; i < size(); i++ )
-                    {
-                        permutation[ i ] = c.getPermutation( i );
-                    }
-                    nextPermutation( c.getFrom(), c.getTo(), permutation );
-                }
-                else if( c.wasUpdated() )
-                {
-                    for( int i = c.getFrom(); i < c.getTo(); i++ )
-                    {
-                        nextUpdate( i );
-                    }
-                }
-            }
-            endChange();
+            localChange = false;
         }
+    }
 
-        protected final List< T > convertToTarget( final List< ? extends S > aSource )
+    @Override
+    protected void addChildFx( final int index, final ContainerIf< ? > child )
+    {
+        if( !( child instanceof TabContainerWrapperIf ) )
         {
-            return aSource.stream().map( mappingFunction ).collect( Collectors.toList() );
+            throw new IllegalStateException();
         }
-
-        @Override
-        public int getSourceIndex( final int index )
+        try
         {
-            return index;
+            localChange = true;
+            getNode().getTabs().add( index, ( (TabContainerWrapperIf< ? >)child ).getTab() );
         }
-
-        @Override
-        public int getViewIndex( final int index )
+        finally
         {
-            return index;
+            localChange = false;
         }
+    }
 
-        @Override
-        public T get( final int index )
+    @Override
+    protected void removeChildFx( final ContainerIf< ? > child )
+    {
+        if( !( child instanceof TabContainerWrapperIf ) )
         {
-            return mappingFunction.apply( getSource().get( getSourceIndex( index ) ) );
+            throw new IllegalStateException();
         }
+        try
+        {
+            localChange = true;
+            getNode().getTabs().remove( ( (TabContainerWrapperIf< ? >)child ).getTab() );
+        }
+        finally
+        {
+            localChange = false;
+        }
+    }
 
-        @Override
-        public int size()
-        {
-            return getSource().size();
-        }
+    @Override
+    public Side getSide()
+    {
+        return side;
     }
 
     @Override
@@ -271,11 +207,5 @@ public class StackContainerImpl extends AbstractContainerImpl< TabPane, TabConta
         {
             getNode().setSide( aSide );
         }
-    }
-
-    @Override
-    public Side getSide()
-    {
-        return side;
     }
 }

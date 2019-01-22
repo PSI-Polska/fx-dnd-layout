@@ -29,7 +29,7 @@ import de.psi.pjf.fx.layout.container.StackContainerIf;
 import de.psi.pjf.fx.layout.container.TabContainerWrapperIf;
 import de.psi.pjf.fx.layout.dnd.markers.PositionMarker;
 import de.psi.pjf.fx.layout.dnd.markers.TabOutlineMarker;
-import de.psi.pjf.fx.layout.skin.DndTabPaneSkinHooker;
+import de.psi.pjf.fx.layout.dnd.skin.DndTabPaneSkinHooker;
 
 /**
  * Factory to create a tab pane who support DnD
@@ -194,23 +194,23 @@ public final class DndTabPaneFactory
         }
         else if( data.targetTab != null )
         {
-            StackContainerIf targetPane = data.targetTab.getParent();
-            data.draggedTab.getParent().remove( data.draggedTab );
+            StackContainerIf< ? > targetPane = data.targetTab.getParent();
+            data.draggedTab.getParent().removeChild( data.draggedTab );
             int idx = targetPane.indexOf( data.targetTab );
             if( data.dropType == DropType.AFTER )
             {
-                if( idx + 1 <= targetPane.getTabNumber() )
+                if( idx + 1 <= targetPane.getTabCount() )
                 {
-                    targetPane.add( idx + 1, data.draggedTab );
+                    targetPane.addChild( idx + 1, data.draggedTab );
                 }
                 else
                 {
-                    targetPane.add( data.draggedTab );
+                    targetPane.addChild( data.draggedTab );
                 }
             }
             else
             {
-                targetPane.add( idx, data.draggedTab );
+                targetPane.addChild( idx, data.draggedTab );
             }
             data.draggedTab.getParent().select( data.draggedTab );
         }
@@ -403,7 +403,7 @@ public final class DndTabPaneFactory
          * @param startFunction
          *     the function
          */
-        public void setStartFunction( Predicate< TabContainerWrapperIf< ? > > startFunction );
+        void setStartFunction( Predicate< TabContainerWrapperIf< ? > > startFunction );
 
         /**
          * Consumer called to handle the finishing of the drag process
@@ -411,7 +411,7 @@ public final class DndTabPaneFactory
          * @param dragFinishedConsumer
          *     the consumer
          */
-        public void setDragFinishedConsumer( Consumer< TabContainerWrapperIf< ? > > dragFinishedConsumer );
+        void setDragFinishedConsumer( Consumer< TabContainerWrapperIf< ? > > dragFinishedConsumer );
 
         /**
          * Consumer called to present drag feedback
@@ -419,7 +419,7 @@ public final class DndTabPaneFactory
          * @param feedbackConsumer
          *     the consumer to call
          */
-        public void setFeedbackConsumer( Consumer< FeedbackData > feedbackConsumer );
+        void setFeedbackConsumer( Consumer< FeedbackData > feedbackConsumer );
 
         /**
          * Consumer called when the drop has to be handled
@@ -427,7 +427,7 @@ public final class DndTabPaneFactory
          * @param dropConsumer
          *     the consumer
          */
-        public void setDropConsumer( Consumer< DroppedData > dropConsumer );
+        void setDropConsumer( Consumer< DroppedData > dropConsumer );
 
         /**
          * Function to translate the tab content into clipboard content
@@ -435,8 +435,7 @@ public final class DndTabPaneFactory
          * @param clipboardDataFunction
          *     the function
          */
-        public void setClipboardDataFunction(
-            Function< TabContainerWrapperIf< ? >, String > clipboardDataFunction );
+        void setClipboardDataFunction( Function< TabContainerWrapperIf< ? >, String > clipboardDataFunction );
     }
 
     private abstract static class MarkerFeedback
@@ -543,16 +542,12 @@ public final class DndTabPaneFactory
             }
             if( this.targetTab == null )
             {
-                if( other.targetTab != null )
-                {
-                    return false;
-                }
+                return other.targetTab == null;
             }
-            else if( !this.targetTab.equals( other.targetTab ) )
+            else
             {
-                return false;
+                return this.targetTab.equals( other.targetTab );
             }
-            return true;
         }
 
     }

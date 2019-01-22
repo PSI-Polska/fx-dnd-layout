@@ -10,11 +10,13 @@ package de.psi.pjf.fx.layout.container;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.ReadOnlyProperty;
 import javafx.collections.ObservableMap;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.control.Tab;
 
 /**
@@ -30,48 +32,63 @@ public final class ContainerUtils
     {
     }
 
-    public static Node findAscendantInclusively( final Node aRoot, final Predicate< Node > aContainerMatcher )
+    public static Optional< ContainerIf< ? > > findAscendantExclusively( final ContainerIf< ? > aContainer,
+        final Predicate< ContainerIf< ? > > aPredicate )
     {
-        if( aRoot == null )
+        if( aContainer == null )
         {
-            return null;
+            return Optional.empty();
         }
-        if( aContainerMatcher.test( aRoot ) )
-        {
-            return aRoot;
-        }
-        return findAscendantInclusively( aRoot.getParent(), aContainerMatcher );
+        return findAscendantInclusively( aContainer.getParent(), aPredicate );
     }
 
-    public static Node findDescendantInclusively( final Node aNode,
-        final Predicate< Node > aContainerMatcher )
+    public static Optional< ContainerIf< ? > > findAscendantInclusively( final ContainerIf< ? > aContainer,
+        final Predicate< ContainerIf< ? > > aPredicate )
     {
-        if( aContainerMatcher.test( aNode ) )
+        ContainerIf< ? > c = aContainer;
+        while( c != null )
         {
-            return aNode;
-        }
-        if( aNode instanceof Parent )
-        {
-            for( final Node node : ( (Parent)aNode ).getChildrenUnmodifiable() )
+            if( aPredicate.test( c ) )
             {
-                if( aContainerMatcher.test( node ) )
-                {
-                    return node;
-                }
-                return findDescendantInclusively( node, aContainerMatcher );
+                return Optional.of( c );
+            }
+            c = c.getParent();
+        }
+        return Optional.empty();
+    }
+
+    public static < T extends ContainerIf< ? > > Optional< T > findAscendantInclusively(
+        final ContainerIf< ? > aContainer, final Class< T > aClass )
+    {
+        return findAscendantInclusively( aContainer, aClass::isInstance ).map( aClass::cast );
+    }
+
+    public static < T extends ContainerIf< ? > > Optional< T > findDescendantExclusively(
+        final ContainerIf< ? > aContainer, final Class< T > aClass )
+    {
+        return findDescendantExclusively( aContainer, aClass::isInstance ).map( aClass::cast );
+    }
+
+    public static Optional< ContainerIf< ? > > findDescendantExclusively( final ContainerIf< ? > aContainer,
+        final Predicate< ContainerIf< ? > > aPredicate )
+    {
+        if( aContainer == null )
+        {
+            return Optional.empty();
+        }
+        for( final ContainerIf< ? > child : aContainer.getChildren() )
+        {
+            if( aPredicate.test( child ) )
+            {
+                return Optional.of( child );
+            }
+            final Optional< ContainerIf< ? > > ret = findDescendantExclusively( child, aPredicate );
+            if( ret.isPresent() )
+            {
+                return ret;
             }
         }
-        return null;
-    }
-
-    public static Node findNodeWithId( final Parent root, final String id )
-    {
-        return findDescendantInclusively( root, getContainerMatcher( id ) );
-    }
-
-    public static < T extends ContainerIf< ? > > Optional< T > getContainer( final Tab aTab )
-    {
-        return getContainer( aTab.getProperties() );
+        return Optional.empty();
     }
 
     public static < T extends ContainerIf< ? > > Optional< T > getContainer( final Node aNode )
@@ -79,10 +96,9 @@ public final class ContainerUtils
         return getContainer( aNode.getProperties() );
     }
 
-    public static Predicate< Node > getContainerMatcher( final String id )
+    public static < T extends ContainerIf< ? > > Optional< T > getContainer( final Tab aTab )
     {
-        Objects.requireNonNull( id );
-        return node -> id.equals( String.valueOf( System.identityHashCode( node ) ) );
+        return getContainer( aTab.getProperties() );
     }
 
     public static String getNodeId( final Node aNode )
@@ -90,14 +106,32 @@ public final class ContainerUtils
         return String.valueOf( System.identityHashCode( aNode ) );
     }
 
-    public static void storeContainer( final ContainerIf< ? > aContainer, final Tab aTab )
+    public static ReadOnlyObjectWrapper< ContainerIf< ? > > restrictValueToContainer(
+        final ReadOnlyProperty< ContainerIf< ? > > focusedContainer,
+        final ContainerIf< ? > upperExclusiveRestriction )
     {
-        storeContainer( aContainer, aTab.getProperties() );
+        Objects.requireNonNull( upperExclusiveRestriction );
+        final ReadOnlyObjectWrapper< ContainerIf< ? > > ret = new ReadOnlyObjectWrapper<>();
+        final Consumer< ContainerIf< ? > > changedNodeConsumer = aContainer -> {
+            if( ContainerUtils.findAscendantExclusively( aContainer, p -> p == upperExclusiveRestriction )
+                .isPresent() )
+            {
+                ret.set( aContainer );
+            }
+        };
+        changedNodeConsumer.accept( focusedContainer.getValue() );
+        focusedContainer.addListener( ( o, oldV, newV ) -> changedNodeConsumer.accept( newV ) );
+        return ret;
     }
 
     public static void storeContainer( final ContainerIf< ? > aContainer, final Node aNode )
     {
         storeContainer( aContainer, aNode.getProperties() );
+    }
+
+    public static void storeContainer( final ContainerIf< ? > aContainer, final Tab aTab )
+    {
+        storeContainer( aContainer, aTab.getProperties() );
     }
 
     private static void storeContainer( final ContainerIf< ? > aContainer,

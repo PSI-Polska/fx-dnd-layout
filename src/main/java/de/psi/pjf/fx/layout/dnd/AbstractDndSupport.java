@@ -57,4 +57,12 @@ public abstract class AbstractDndSupport
             CURRENT_MARKER_FEEDBACK = null;
         }
     }
+
+    protected static void logError( final String msg, final Throwable ex )
+    {
+        // FIXME pkruszczynski 22.01.2019: introduce logger
+        System.err.println( "ERROR [AbstractDndSupport] - " + msg );
+        ex.printStackTrace();
+    }
+
 }

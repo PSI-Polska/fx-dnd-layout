@@ -10,7 +10,7 @@
  *******************************************************************************/
 package de.psi.pjf.fx.layout.dnd;
 
-import javafx.scene.Node;
+import de.psi.pjf.fx.layout.container.ContainerIf;
 
 /**
  * Drop data
@@ -20,11 +20,11 @@ public class DropData
     /**
      * The reference element
      */
-    public final Node reference;
+    public final ContainerIf< ? > reference;
     /**
      * The source element
      */
-    public final Node sourceElement;
+    public final ContainerIf< ? > sourceElement;
     /**
      * The drop type
      */
@@ -53,7 +53,8 @@ public class DropData
      * @param dropType
      *     the drop type
      */
-    public DropData( double x, double y, Node reference, Node sourceElement, DropLocation dropType )
+    public DropData( double x, double y, ContainerIf< ? > reference, ContainerIf< ? > sourceElement,
+        DropLocation dropType )
     {
         this.x = x;
         this.y = y;

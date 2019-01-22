@@ -10,6 +10,7 @@ package de.psi.pjf.fx.layout.container;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -36,7 +37,7 @@ public class TabContainerWrapperImpl< N extends Node > extends AbstractSimpleCon
     @JsonCreator
     public TabContainerWrapperImpl( @JsonProperty( value = "content" ) final ContainerIf< N > aContainer )
     {
-        content = aContainer;
+        content = Objects.requireNonNull( aContainer );
         singleChildren = Collections.singletonList( content );
         content.setParent( this );
     }
@@ -86,6 +87,18 @@ public class TabContainerWrapperImpl< N extends Node > extends AbstractSimpleCon
     }
 
     @Override
+    public int getChildrenCount()
+    {
+        return 1;
+    }
+
+    @Override
+    public int indexOf( final ContainerIf< ? > child )
+    {
+        return child == content ? 0 : -1;
+    }
+
+    @Override
     protected N createNode()
     {
         final N node = content.getNode();
@@ -96,7 +109,7 @@ public class TabContainerWrapperImpl< N extends Node > extends AbstractSimpleCon
     @Override
     public void setParent( final ContainerIf< ? > aParent )
     {
-        if( !( aParent instanceof StackContainerIf< ? > ) )
+        if( aParent != null && !( aParent instanceof StackContainerIf< ? > ) )
         {
             throw new IllegalArgumentException(
                 "TabContainerWrapper's parent shall be a StackContainerIf implementation." );
