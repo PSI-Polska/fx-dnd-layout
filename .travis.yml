@@ -25,7 +25,7 @@ before_deploy:
 deploy:
   - provider: releases
     name: $project_version
-    prerelease: env(is_snapshot) IS present
+    prerelease: false
     api_key: "$GH_TOKEN"
     file: 
       - target/fx-dnd-layout-$project_version.jar
@@ -33,3 +33,15 @@ deploy:
     skip_cleanup: true
     on:
       repo: PSI-Polska/fx-dnd-layout
+      condition: $is_snapshot IS blank
+  - provider: releases
+    name: $project_version
+    prerelease: true
+    api_key: "$GH_TOKEN"
+    file: 
+      - target/fx-dnd-layout-$project_version.jar
+      - target/fx-dnd-layout-$project_version-sources.jar
+    skip_cleanup: true
+    on:
+      repo: PSI-Polska/fx-dnd-layout
+      condition: $is_snapshot IS present
