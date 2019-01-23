@@ -65,6 +65,42 @@ public final class FxUtils
         }
     }
 
+    /**
+     * Similar to {@link #executeOnceWhenPropertyIsNonNull(ObservableValue, Consumer)}, but invokes
+     * <code>aConsumer</code> only if <code>aObservable</code> has a <code>expectedValue</code>.
+     */
+    public static < T > void executeOnceWhenPropertyHasExpectedValue( final ObservableValue< T > aObservable,
+        final T expectedValue, final Consumer< T > aConsumer )
+    {
+        if( aObservable == null )
+        {
+            return;
+        }
+        T value = aObservable.getValue();
+        if( Objects.equals( value, expectedValue ) )
+        {
+            aConsumer.accept( value );
+        }
+        else
+        {
+            final InvalidationListener listener = new InvalidationListener()
+            {
+                @Override
+                public void invalidated( Observable observable )
+                {
+                    T value = aObservable.getValue();
+
+                    if( Objects.equals( value, expectedValue ) )
+                    {
+                        aObservable.removeListener( this );
+                        aConsumer.accept( value );
+                    }
+                }
+            };
+            aObservable.addListener( listener );
+        }
+    }
+
     public static Node findAscendantInclusively( final Node aRoot, final Predicate< Node > aContainerMatcher )
     {
         if( aRoot == null )

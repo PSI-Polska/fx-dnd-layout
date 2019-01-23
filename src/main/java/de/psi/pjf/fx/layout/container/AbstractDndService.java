@@ -70,11 +70,11 @@ public abstract class AbstractDndService implements DndService
             throw new IllegalStateException(
                 "Dropped source element should be a tab with stack container as a parent." );
         }
-        final StackContainerIf< ? > destParent = (StackContainerIf< ? >)aReference.getParent();
         final TabContainerWrapperIf< ? > sourceTabElement = (TabContainerWrapperIf< ? >)aSourceElement;
         final StackContainerIf< ? > oldParent = sourceTabElement.getParent();
         oldParent.removeChild( sourceTabElement );
         cleanupAfterRemoving( oldParent );
+        final StackContainerIf< ? > destParent = (StackContainerIf< ? >)aReference.getParent();
         final int indexOfDest = destParent.indexOf( aReference );
         final int newIndex = dropLocation == BasicDropLocation.BEFORE ? indexOfDest : indexOfDest + 1;
         destParent.addChild( newIndex, sourceTabElement );
@@ -109,9 +109,9 @@ public abstract class AbstractDndService implements DndService
             throw new IllegalStateException( "Unsupported drop type" );
         }
         final ContainerIf< ? > oldParent = draggedContainer.getParent();
-        final ContainerIf< ? > targetParent = dropTargetContainer.getParent();
         oldParent.removeChild( draggedContainer );
         cleanupAfterRemoving( oldParent );
+        final ContainerIf< ? > targetParent = dropTargetContainer.getParent();
         final int currentIndex = targetParent.indexOf( dropTargetContainer );
         targetParent.removeChild( dropTargetContainer );
         final SplitContainerIf< ? > splitContainer = getContainerFactory().createSplitContainer();

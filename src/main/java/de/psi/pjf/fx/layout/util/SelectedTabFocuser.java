@@ -11,7 +11,6 @@ package de.psi.pjf.fx.layout.util;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.value.ChangeListener;
@@ -32,6 +31,7 @@ import javafx.scene.input.MouseEvent;
 public class SelectedTabFocuser implements ChangeListener< Boolean >, EventHandler< MouseEvent >
 {
 
+    private static final String TAB_HEADER_AREA_STYLE_CLASS = ".tab-header-area";
     private final Supplier< Node > nodeToFocusProvider;
     private boolean focusContentNode = false;
     private final InvalidationListener tabStructureChangeListener = this::tabStructureChanged;
@@ -61,11 +61,9 @@ public class SelectedTabFocuser implements ChangeListener< Boolean >, EventHandl
         }
         if( newValue != null )
         {
-            Platform.runLater( () -> {
-                final Node nodeToFocus = nodeToFocusProvider.get();
-                FxUtils.executeOnceWhenPropertyIsNonNull( nodeToFocus.sceneProperty(),
-                    $ -> nodeToFocus.requestFocus() );
-            } );
+            final Node nodeToFocus = nodeToFocusProvider.get();
+            FxUtils.executeOnceWhenPropertyHasExpectedValue( newValue.selectedProperty(), true,
+                $ -> nodeToFocus.requestFocus() );
         }
     }
 
@@ -88,7 +86,7 @@ public class SelectedTabFocuser implements ChangeListener< Boolean >, EventHandl
     @Override
     public void handle( final MouseEvent aEvent )
     {
-        focusContentNode = true;
+        focusContentNode = aEvent.getEventType() == MouseEvent.MOUSE_PRESSED;
     }
 
     private void tabStructureChanged( final Observable aObservable )
@@ -98,10 +96,16 @@ public class SelectedTabFocuser implements ChangeListener< Boolean >, EventHandl
 
     public void install( final TabPane aTabPane )
     {
-        aTabPane.focusedProperty().addListener( this );
-        aTabPane.addEventFilter( MouseEvent.MOUSE_PRESSED, this );
-        aTabPane.getSelectionModel().selectedItemProperty().addListener( selectedTabChangeListener );
-        aTabPane.getTabs().addListener( tabStructureChangeListener );
+        FxUtils.executeOnceWhenPropertyIsNonNull( aTabPane.skinProperty(), $ -> {
+            final Node headerNode = aTabPane.lookup( TAB_HEADER_AREA_STYLE_CLASS );
+            headerNode.addEventFilter( MouseEvent.MOUSE_PRESSED, this );
+            headerNode.addEventFilter( MouseEvent.MOUSE_EXITED, this );
+            headerNode.addEventFilter( MouseEvent.MOUSE_EXITED_TARGET, this );
+            headerNode.addEventFilter( MouseEvent.MOUSE_MOVED, this );
+            aTabPane.focusedProperty().addListener( this );
+            aTabPane.getSelectionModel().selectedItemProperty().addListener( selectedTabChangeListener );
+            aTabPane.getTabs().addListener( tabStructureChangeListener );
+        } );
     }
 
     public void uninstall( final TabPane aTabPane )
