@@ -33,7 +33,7 @@ deploy:
     skip_cleanup: true
     on:
       repo: PSI-Polska/fx-dnd-layout
-      condition: $is_snapshot IS blank
+      condition: env(is_snapshot) IS blank
   - provider: releases
     name: $project_version
     prerelease: true
@@ -44,4 +44,4 @@ deploy:
     skip_cleanup: true
     on:
       repo: PSI-Polska/fx-dnd-layout
-      condition: $is_snapshot IS present
+      condition: env(is_snapshot) IS present
