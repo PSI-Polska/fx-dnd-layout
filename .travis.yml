@@ -19,9 +19,16 @@ before_deploy:
     else export TRAVIS_TAG=${TRAVIS_TAG:-$project_version};
     fi
   # Set up git user name and tag this commit
-  - git config --local user.name "$GH_NAME"
-  - git config --local user.email "$GH_MAIL"
-  - git tag $TRAVIS_TAG
+  - if git rev-parse "$TRAVIS_TAG" >/dev/null 2>&1;
+    then export is_already_deployed=true;
+    fi
+  - if [ "$is_already_deployed" = true ];
+    then echo "Release $TRAVIS_TAG was already deployed, skipping deploy.";
+    else echo "Creating tag for $TRAVIS_TAG release as deployment preparation.";
+    git config --local user.name "$GH_NAME";
+    git config --local user.email "$GH_MAIL";
+    git tag $TRAVIS_TAG;
+    fi
 deploy:
   - provider: releases
     name: $project_version
@@ -33,15 +40,15 @@ deploy:
     skip_cleanup: true
     on:
       repo: PSI-Polska/fx-dnd-layout
-      condition: "! $is_snapshot"
-  - provider: releases
-    name: $project_version
-    prerelease: true
-    api_key: "$GH_TOKEN"
-    file: 
-      - target/fx-dnd-layout-$project_version.jar
-      - target/fx-dnd-layout-$project_version-sources.jar
-    skip_cleanup: true
-    on:
-      repo: PSI-Polska/fx-dnd-layout
-      condition: "$is_snapshot"
+      condition: "! $is_snapshot && ! $is_already_deployed"
+  # - provider: releases
+  #   name: $project_version
+  #   prerelease: true
+  #   api_key: "$GH_TOKEN"
+  #   file: 
+  #     - target/fx-dnd-layout-$project_version.jar
+  #     - target/fx-dnd-layout-$project_version-sources.jar
+  #   skip_cleanup: true
+  #   on:
+  #     repo: PSI-Polska/fx-dnd-layout
+  #     condition: "$is_snapshot"
