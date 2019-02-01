@@ -29,6 +29,9 @@ before_deploy:
           git config --local user.email "$GH_MAIL";
           git tag $TRAVIS_TAG;
         fi
+        if ! [ "$is_snapshot" = true ] && ! [ "$is_already_deployed" = true ];
+          then export SHOULD_RUN_DEPLOY=true;
+        fi
       fi
 deploy:
   - provider: script
@@ -37,7 +40,7 @@ deploy:
     script: mvn --settings .maven.xml clean deploy -DskipTests=true -B -U -Prelease
     skip_cleanup: true
     on:
-      condition: "! $is_snapshot && ! $is_already_deployed"
+      condition: "SHOULD_RUN_DEPLOY"
   - provider: releases
     name: $project_version
     prerelease: false
@@ -48,7 +51,7 @@ deploy:
     skip_cleanup: true
     on:
       repo: PSI-Polska/fx-dnd-layout
-      condition: "! $is_snapshot && ! $is_already_deployed"
+      condition: "SHOULD_RUN_DEPLOY"
   # - provider: releases
   #   name: $project_version
   #   prerelease: true
