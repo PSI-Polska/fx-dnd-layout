@@ -5,7 +5,7 @@
 
     <groupId>de.psi.pjf.fx.layout</groupId>
     <artifactId>fx-dnd-layout</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.1</version>
     <packaging>jar</packaging>
 
     <name>JavaFx Drag and Drop Layout</name>
