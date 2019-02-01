@@ -9,6 +9,8 @@
     <packaging>jar</packaging>
 
     <name>JavaFx Drag and Drop Layout</name>
+    <description>Javafx component that offers customizable layout with drag and drop feature.</description>
+    <url>https://github.com/PSI-Polska/fx-dnd-layout/</url>
 
     <licenses>
         <license>
