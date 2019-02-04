@@ -16,7 +16,6 @@ script:
         then export TRAVIS_TAG=${TRAVIS_TAG:-$project_version-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)};
         else export TRAVIS_TAG=${TRAVIS_TAG:-$project_version};
       fi
-      # Set up git user name and tag this commit
       export tag_exists=$(git rev-parse "$TRAVIS_TAG" >/dev/null 2>&1);
       if [ $tag_exists ];
         then export is_already_deployed=true;
