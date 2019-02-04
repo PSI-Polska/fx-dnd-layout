@@ -21,8 +21,6 @@ script:
     fi
   - if ! [ "$is_snapshot" = true ] && ! [ "$is_already_deployed" = true ];
       then export SHOULD_RUN_DEPLOY=true;
-    fi
-  - if [ "$is_already_deployed" = true ];
       then echo "Release $TRAVIS_TAG was already deployed, skipping deploy.";
       else echo "Creating tag for $TRAVIS_TAG release as deployment preparation.";
       git config --local user.name "$GH_NAME";
