@@ -40,7 +40,7 @@ deploy:
     script: mvn --settings .maven.xml clean deploy -DskipTests=true -B -U -Prelease
     skip_cleanup: true
     on:
-      condition: "SHOULD_RUN_DEPLOY"
+      condition: "$SHOULD_RUN_DEPLOY"
   - provider: releases
     name: $project_version
     prerelease: false
@@ -51,7 +51,7 @@ deploy:
     skip_cleanup: true
     on:
       repo: PSI-Polska/fx-dnd-layout
-      condition: "SHOULD_RUN_DEPLOY"
+      condition: "$SHOULD_RUN_DEPLOY"
   # - provider: releases 
   #   name: $project_version
   #   prerelease: true
