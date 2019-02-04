@@ -17,7 +17,8 @@ script:
         else export TRAVIS_TAG=${TRAVIS_TAG:-$project_version};
       fi
       # Set up git user name and tag this commit
-      if [ git rev-parse "$TRAVIS_TAG" >/dev/null 2>&1 ];
+      export tag_exists=$(git rev-parse "$TRAVIS_TAG" >/dev/null 2>&1);
+      if [ $tag_exists ];
         then export is_already_deployed=true;
       fi
       if ! [ "$is_snapshot" = true ] && ! [ "$is_already_deployed" = true ];
