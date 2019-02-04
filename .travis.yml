@@ -8,7 +8,7 @@ before_install:
   - echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
 install:
     mvn --settings .maven.xml clean verify -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
-script:
+after_install:
     export project_version=$(mvn help:evaluate -N -Dexpression=project.version | grep -v '\[' | tail -n 1);
     export is_snapshot=$(echo $project_version | grep SNAPSHOT);
     if [ $is_snapshot ];
