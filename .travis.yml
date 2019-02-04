@@ -8,7 +8,7 @@ before_install:
   - echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
 install:
     mvn --settings .maven.xml clean verify -Dgpg.skip -Dmaven.javadoc.skip=true -B -V
-after_install:
+script:
     export project_version=$(mvn help:evaluate -N -Dexpression=project.version | grep -v '\[' | tail -n 1);
     export is_snapshot=$(echo $project_version | grep SNAPSHOT);
     if [ $is_snapshot ];
@@ -19,15 +19,15 @@ after_install:
     if git rev-parse "$TRAVIS_TAG" >/dev/null 2>&1;
       then export is_already_deployed=true;
     fi
+    if ! [ "$is_snapshot" = true ] && ! [ "$is_already_deployed" = true ];
+      then export SHOULD_RUN_DEPLOY=true;
+    fi
     if [ "$is_already_deployed" = true ];
       then echo "Release $TRAVIS_TAG was already deployed, skipping deploy.";
       else echo "Creating tag for $TRAVIS_TAG release as deployment preparation.";
       git config --local user.name "$GH_NAME";
       git config --local user.email "$GH_MAIL";
       git tag $TRAVIS_TAG;
-    fi
-    if ! [ "$is_snapshot" = true ] && ! [ "$is_already_deployed" = true ];
-      then export SHOULD_RUN_DEPLOY=true;
     fi
 deploy:
   - provider: script
