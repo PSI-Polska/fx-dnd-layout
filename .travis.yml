@@ -15,8 +15,8 @@ script:
       then export TRAVIS_TAG=${TRAVIS_TAG:-$project_version-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)};
       else export TRAVIS_TAG=${TRAVIS_TAG:-$project_version};
     fi
-  - export tag_exists=$(git rev-parse "$TRAVIS_TAG" >/dev/null 2>&1);
-  - if [ $tag_exists ];
+  - export tag_exists=$(git rev-parse "$TRAVIS_TAG" > /dev/null 2>&1; if [ $? == 0 ]; then echo true; else echo false; fi);
+  - if [ "$tag_exists" = true ];
       then export is_already_deployed=true;
     fi
   - if ! [ "$is_snapshot" = true ] && ! [ "$is_already_deployed" = true ]; then
