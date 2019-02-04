@@ -52,7 +52,7 @@ deploy:
     on:
       repo: PSI-Polska/fx-dnd-layout
       condition: "SHOULD_RUN_DEPLOY"
-  # - provider: releases
+  # - provider: releases 
   #   name: $project_version
   #   prerelease: true
   #   api_key: "$GH_TOKEN"
