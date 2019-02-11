@@ -1,5 +1,6 @@
 package de.psi.pjf.fx.layout;
 
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -11,14 +12,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import de.psi.pjf.fx.layout.container.ContainerAccessor;
 import de.psi.pjf.fx.layout.container.ContainerConstants;
 import de.psi.pjf.fx.layout.container.ContainerFactoryIf;
 import de.psi.pjf.fx.layout.container.ContainerIf;
 import de.psi.pjf.fx.layout.container.DndStackContainer;
 import de.psi.pjf.fx.layout.container.LayoutContainerIf;
 import de.psi.pjf.fx.layout.container.LayoutContainerImpl;
-import de.psi.pjf.fx.layout.container.NodeContainer;
+import de.psi.pjf.fx.layout.container.NodeContainerWrapper;
+import de.psi.pjf.fx.layout.container.NodeCustomizerIf;
 import de.psi.pjf.fx.layout.container.NodeCustomizerServiceIf;
+import de.psi.pjf.fx.layout.container.NodeCustomizerServiceImpl;
 import de.psi.pjf.fx.layout.container.SplitContainerIf;
 import de.psi.pjf.fx.layout.container.SplitContainerImpl;
 import de.psi.pjf.fx.layout.container.StackContainerIf;
@@ -37,10 +41,14 @@ public class LayoutSerializerTest
 {
     private static final DndService dndService = Mockito.mock( DndService.class );
     private static final DndFeedbackService dndFeedbackService = new DefaultDndFeedback();
+    public static final String SIMPLE_NODE_CUSTOMIZER_ID = "simpleNodeCustomizer";
+    public static final NodeCustomizerIf SIMPLE_NODE_CUSTOMIZER = ( aContainer, aNode ) -> {
+    };
     private final Consumer< DropData > testDropCallback = aDropData -> {
     };
     private final Predicate< DragData > testDragStartCallback = aDropData -> true;
     private LayoutSerializerIf serializer;
+    private NodeCustomizerServiceIf nodeCustomizerService = new NodeCustomizerServiceImpl();
 
     @Before
     public void setUp() throws Exception
@@ -51,7 +59,8 @@ public class LayoutSerializerTest
         mapper.setInjectableValues( values );
         values.addValue( DndService.class, dndService );
         values.addValue( DndFeedbackService.class, dndFeedbackService );
-        values.addValue( NodeCustomizerServiceIf.class, Mockito.mock( NodeCustomizerServiceIf.class ) );
+        values.addValue( NodeCustomizerServiceIf.class, nodeCustomizerService );
+        nodeCustomizerService.registerNodeCustomizer( SIMPLE_NODE_CUSTOMIZER_ID, SIMPLE_NODE_CUSTOMIZER );
         values.addValue( ContainerConstants.SPLIT_DROP_CALLBACK_NAME, testDropCallback );
         values.addValue( ContainerConstants.TAB_DRAG_START_CALLBACK_NAME, testDragStartCallback );
         values.addValue( ContainerConstants.TAB_DROP_CALLBACK_NAME, testDropCallback );
@@ -93,7 +102,7 @@ public class LayoutSerializerTest
     public void testTabsDeserialization() throws Exception
     {
         final StackContainerIf< ? > stackContainer = new StackContainerImpl();
-        final NodeContainer screenWrapper = new NodeContainer( Region::new );
+        final NodeContainerWrapper screenWrapper = new NodeContainerWrapper( Region::new );
         final TabContainerWrapperIf< ? > tabContainerWrapper = new TabContainerWrapperImpl<>( screenWrapper );
         stackContainer.addChild( tabContainerWrapper );
         final SplitContainerIf< ? > split = new SplitContainerImpl();
@@ -115,6 +124,8 @@ public class LayoutSerializerTest
     {
         final DndStackContainer dndStackContainer = new DndStackContainer( dndService, dndFeedbackService );
         dndStackContainer.setSplitDropCallback( testDropCallback );
+        dndStackContainer.setTabDropCallback( testDropCallback );
+        dndStackContainer.setTabDragStartCallback( testDragStartCallback );
         final LayoutContainerIf< ? > layoutContainer = new LayoutContainerImpl( dndStackContainer );
         final String jsonStr = serializer.toStringValue( layoutContainer );
         final LayoutContainerIf deserializedLayoutContainer = serializer.fromXml( jsonStr );
@@ -122,6 +133,27 @@ public class LayoutSerializerTest
         Assert.assertNotNull( mainContainer );
         final DndStackContainer dndDeserialized = (DndStackContainer)mainContainer;
         Assert.assertEquals( testDropCallback, dndDeserialized.getSplitDropCallback() );
+        Assert.assertEquals( testDropCallback, dndDeserialized.getTabDropCallback() );
+        Assert.assertEquals( testDragStartCallback, dndDeserialized.getTabDragStartCallback() );
+    }
+
+    @Test
+    public void testNodeCustomizer() throws Exception
+    {
+        final DndStackContainer dndStackContainer = new DndStackContainer( dndService, dndFeedbackService );
+        dndStackContainer.setSplitDropCallback( testDropCallback );
+        dndStackContainer.setTabDropCallback( testDropCallback );
+        dndStackContainer.setTabDragStartCallback( testDragStartCallback );
+        dndStackContainer.setNodeCustomizerService( nodeCustomizerService );
+        dndStackContainer.addNodeCustomizer( SIMPLE_NODE_CUSTOMIZER_ID );
+        final LayoutContainerIf< ? > layoutContainer = new LayoutContainerImpl( dndStackContainer );
+        final String jsonStr = serializer.toStringValue( layoutContainer );
+        final LayoutContainerIf deserializedLayoutContainer = serializer.fromXml( jsonStr );
+        final ContainerIf mainContainer = deserializedLayoutContainer.getMainContainer();
+        Assert.assertNotNull( mainContainer );
+        final DndStackContainer dndDeserialized = (DndStackContainer)mainContainer;
+        final Set< String > dndContainerCustomizers = ContainerAccessor.getNodeCustomizers( dndDeserialized );
+        Assert.assertTrue( dndContainerCustomizers.contains( SIMPLE_NODE_CUSTOMIZER_ID ) );
     }
 
 }

@@ -69,7 +69,7 @@ public class ContainerFactory implements ContainerFactoryIf
     @Override
     public ContainerIf< ? > createNodeContainer( final Supplier< Node > aNodeSupplier )
     {
-        return new NodeContainer( aNodeSupplier );
+        return new NodeContainerWrapper( aNodeSupplier );
     }
 
     @Override

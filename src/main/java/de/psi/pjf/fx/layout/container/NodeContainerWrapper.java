@@ -1,6 +1,6 @@
 // ******************************************************************
 //
-// NodeContainer.java
+// NodeContainerWrapper.java
 // Copyright 2019 PSI AG. All rights reserved.
 // PSI PROPRIETARY/CONFIDENTIAL. Use is subject to license terms
 //
@@ -20,16 +20,16 @@ import javafx.scene.Node;
  * @author last change: $Author: $ on $Date: $
  * @version $Revision: $
  */
-public class NodeContainer extends AbstractSimpleContainerImpl< Node >
+public class NodeContainerWrapper extends AbstractSimpleContainerImpl< Node >
 {
     @JsonIgnore
     private Supplier< Node > contentSupplier;
 
-    public NodeContainer()
+    public NodeContainerWrapper()
     {
     }
 
-    public NodeContainer( final Supplier< Node > aContentSupplier )
+    public NodeContainerWrapper( final Supplier< Node > aContentSupplier )
     {
         contentSupplier = aContentSupplier;
     }

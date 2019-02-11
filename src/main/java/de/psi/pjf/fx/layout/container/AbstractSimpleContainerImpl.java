@@ -13,6 +13,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import javafx.scene.Node;
 
 /**
@@ -31,7 +32,9 @@ public abstract class AbstractSimpleContainerImpl< N extends Node > implements C
     @JsonIgnore
     private N node;
     private ContainerIf< ? > parent;
+    @JsonProperty
     private Set< String > nodeCustomizerIds;
+    @JsonIgnore
     @JacksonInject
     private NodeCustomizerServiceIf nodeCustomizerService;
 
@@ -44,6 +47,12 @@ public abstract class AbstractSimpleContainerImpl< N extends Node > implements C
 
     protected void postNodeCreation( final Node aNode )
     {
+    }
+
+    @JsonIgnore
+    Set< String > getNodeCustomizerIds()
+    {
+        return nodeCustomizerIds;
     }
 
     @Override

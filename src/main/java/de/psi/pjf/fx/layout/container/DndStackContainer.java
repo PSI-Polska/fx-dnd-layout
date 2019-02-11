@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javafx.scene.Node;
 import javafx.scene.control.TabPane;
 
@@ -35,10 +36,13 @@ public class DndStackContainer extends StackContainerImpl implements DndCallback
 
     private final DndService dndService;
     private final DndFeedbackService dndFeedback;
+    @JsonIgnore
     @JacksonInject( value = ContainerConstants.SPLIT_DROP_CALLBACK_NAME )
     private Consumer< DropData > splitDropCallback;
+    @JsonIgnore
     @JacksonInject( value = ContainerConstants.TAB_DROP_CALLBACK_NAME )
     private Consumer< DropData > tabDropCallback;
+    @JsonIgnore
     @JacksonInject( value = ContainerConstants.TAB_DRAG_START_CALLBACK_NAME )
     private Predicate< DragData > tabDragStartCallback;
 
