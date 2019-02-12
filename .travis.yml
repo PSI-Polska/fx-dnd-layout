@@ -31,7 +31,7 @@ deploy:
   - provider: script
     name: $project_version
     ## Build and release to maven central
-    script: mvn --settings .maven.xml clean deploy -DskipTests=true -B -U -Prelease
+    script: mvn --settings .maven.xml clean deploy -DskipTests=true -B -U -Prelease && export MAVEN_DEPLOYED=true
     skip_cleanup: true
     on:
       condition: "$SHOULD_RUN_DEPLOY"
@@ -57,3 +57,7 @@ deploy:
   #   on:
   #     repo: PSI-Polska/fx-dnd-layout
   #     condition: "$is_snapshot"
+after_deploy:
+  - if ! [ "$MAVEN_DEPLOYED" = true ]; then
+      git push --delete origin $TRAVIS_TAG
+      git tag --delete $TRAVIS_TAG
