@@ -156,4 +156,23 @@ public class LayoutSerializerTest
         Assert.assertTrue( dndContainerCustomizers.contains( SIMPLE_NODE_CUSTOMIZER_ID ) );
     }
 
+    @Test
+    public void testContainerIdMap() throws Exception
+    {
+        final DndStackContainer dndStackContainer = new DndStackContainer( dndService, dndFeedbackService );
+        dndStackContainer.setSplitDropCallback( testDropCallback );
+        dndStackContainer.setTabDropCallback( testDropCallback );
+        dndStackContainer.setTabDragStartCallback( testDragStartCallback );
+        dndStackContainer.setNodeCustomizerService( nodeCustomizerService );
+        dndStackContainer.addNodeCustomizer( SIMPLE_NODE_CUSTOMIZER_ID );
+        final LayoutContainerIf< ? > layoutContainer = new LayoutContainerImpl( dndStackContainer );
+        final String dndStackStorageId = "DndStorageId555";
+        layoutContainer.storeContainerId( dndStackStorageId, dndStackContainer );
+        final String jsonStr = serializer.toStringValue( layoutContainer );
+        final LayoutContainerIf deserializedLayoutContainer = serializer.fromXml( jsonStr );
+        Assert.assertNotNull( deserializedLayoutContainer );
+        Assert.assertNotNull( deserializedLayoutContainer.getContainerById( dndStackStorageId ) );
+        Assert.assertEquals( deserializedLayoutContainer.getMainContainer(),
+            deserializedLayoutContainer.getContainerById( dndStackStorageId ) );
+    }
 }

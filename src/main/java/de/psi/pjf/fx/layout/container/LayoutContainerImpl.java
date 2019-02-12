@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonMerge;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -32,6 +34,8 @@ import de.psi.pjf.fx.layout.util.FxUtils;
  */
 public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
 {
+    @JsonMerge
+    @JsonProperty( value = "containerIdsMap" )
     private final Map< String, ContainerIf< ? > > containerIdsMap = new HashMap<>();
     @JsonIgnore
     private final FocusTracker focusTracker = new FocusTracker();
@@ -96,6 +100,12 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
     }
 
     @Override
+    public ContainerIf< ? > removeStored( final String id )
+    {
+        return containerIdsMap.remove( id );
+    }
+
+    @Override
     public ContainerIf< ? > getMainContainer()
     {
         return mainContainer;
@@ -104,7 +114,12 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
     @Override
     public void setMainContainer( final ContainerIf< ? > aMainContainer )
     {
+        if( mainContainer != null )
+        {
+            mainContainer.setParent( null );
+        }
         mainContainer = aMainContainer;
+        mainContainer.setParent( this );
         if( pane != null )
         {
             pane.setCenter( aMainContainer.getNode() );
