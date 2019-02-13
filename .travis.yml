@@ -58,6 +58,6 @@ deploy:
   #     repo: PSI-Polska/fx-dnd-layout
   #     condition: "$is_snapshot"
 after_deploy:
-  - if ! [ "$MAVEN_DEPLOYED" = true ]; then
+  - if [ $SHOULD_RUN_DEPLOY ] && ! [ "$MAVEN_DEPLOYED" = true ]; then
       git push --delete origin $TRAVIS_TAG
       git tag --delete $TRAVIS_TAG
