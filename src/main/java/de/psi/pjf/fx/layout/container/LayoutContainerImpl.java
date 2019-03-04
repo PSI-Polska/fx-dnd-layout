@@ -254,7 +254,7 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
 
         public void dispose()
         {
-            focusedContainer.set( null );
+            focusedContainer.set( new FocusedState( null, FocusedState.Type.NULL ) );
             scene.focusOwnerProperty().removeListener( this );
             this.scene = null;
         }
