@@ -37,13 +37,15 @@ public interface LayoutContainerIf< N extends BorderPane > extends ContainerIf< 
     @JsonIgnore
     FocusedState getFocusedContainer();
 
+    Map< String, ContainerIf< ? > > getContainerIdsMap();
+
     @JsonIgnore
     ContainerIf< ? > getContainerById( String id );
 
     @JsonIgnore
     void storeContainerId( String id, ContainerIf< ? > aContainer );
 
-    void removeStored( String id );
+    void removeStoredContainer( String id );
 
     ContainerIf< ? > getMainContainer();
 

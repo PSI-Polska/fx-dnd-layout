@@ -93,6 +93,13 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
         return focusTracker.getFocusedContainer();
     }
 
+    @JsonIgnore
+    @Override
+    public Map< String, ContainerIf< ? > > getContainerIdsMap()
+    {
+        return Map.copyOf( containerIdsMap );
+    }
+
     @Override
     public ContainerIf< ? > getContainerById( final String id )
     {
@@ -106,7 +113,7 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
     }
 
     @Override
-    public void removeStored( final String id )
+    public void removeStoredContainer( final String id )
     {
         containerIdsMap.remove( id );
     }
