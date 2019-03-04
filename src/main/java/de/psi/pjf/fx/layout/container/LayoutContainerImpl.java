@@ -76,13 +76,19 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
     }
 
     @Override
-    public ReadOnlyObjectProperty< ContainerIf< ? > > focusedContainerProperty()
+    public ReadOnlyObjectProperty< FocusedState > focusedContainerProperty()
     {
         return focusTracker.focusedContainerProperty();
     }
 
     @Override
-    public ContainerIf< ? > getFocusedContainer()
+    public void clearFocus()
+    {
+        focusTracker.clearFocus();
+    }
+
+    @Override
+    public FocusedState getFocusedContainer()
     {
         return focusTracker.getFocusedContainer();
     }
@@ -100,9 +106,9 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
     }
 
     @Override
-    public ContainerIf< ? > removeStored( final String id )
+    public void removeStored( final String id )
     {
-        return containerIdsMap.remove( id );
+        containerIdsMap.remove( id );
     }
 
     @Override
@@ -212,8 +218,9 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
 
     private static class FocusTracker implements ChangeListener< Node >
     {
-        private final ReadOnlyObjectWrapper< ContainerIf< ? > > focusedContainer =
-            new ReadOnlyObjectWrapper<>();
+        private final ReadOnlyObjectWrapper< FocusedState > focusedContainer =
+            new ReadOnlyObjectWrapper<>(
+                new FocusedState( null, FocusedState.Type.NULL ) );
         private Scene scene;
 
         @Override
@@ -233,11 +240,15 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
                     }
                     n = n.getParent();
                 }
-                focusedContainer.set( foundContainer );
+                focusedContainer.set( new FocusedState( foundContainer,
+                    foundContainer == null ?
+                        FocusedState.Type.OUT_OF_LAYOUT :
+                        FocusedState.Type.NORMAL ) );
             }
             else
             {
-                focusedContainer.set( null );
+                focusedContainer
+                    .set( new FocusedState( null, FocusedState.Type.NULL ) );
             }
         }
 
@@ -248,12 +259,12 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
             this.scene = null;
         }
 
-        public ReadOnlyObjectProperty< ContainerIf< ? > > focusedContainerProperty()
+        public ReadOnlyObjectProperty< FocusedState > focusedContainerProperty()
         {
             return focusedContainer.getReadOnlyProperty();
         }
 
-        public ContainerIf< ? > getFocusedContainer()
+        public FocusedState getFocusedContainer()
         {
             return focusedContainer.get();
         }
@@ -261,6 +272,12 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
         public void setScene( final Scene aScene )
         {
             scene = aScene;
+        }
+
+        public void clearFocus()
+        {
+            focusedContainer
+                .set( new FocusedState( null, FocusedState.Type.NULL ) );
         }
     }
 }

@@ -106,17 +106,29 @@ public final class ContainerUtils
         return String.valueOf( System.identityHashCode( aNode ) );
     }
 
-    public static ReadOnlyObjectWrapper< ContainerIf< ? > > restrictValueToContainer(
-        final ReadOnlyProperty< ContainerIf< ? > > focusedContainer,
+    public static ReadOnlyObjectWrapper< FocusedState > restrictValueToContainer(
+        final ReadOnlyProperty< FocusedState > focusedContainer,
         final ContainerIf< ? > upperExclusiveRestriction )
     {
         Objects.requireNonNull( upperExclusiveRestriction );
-        final ReadOnlyObjectWrapper< ContainerIf< ? > > ret = new ReadOnlyObjectWrapper<>();
-        final Consumer< ContainerIf< ? > > changedNodeConsumer = aContainer -> {
-            if( ContainerUtils.findAscendantExclusively( aContainer, p -> p == upperExclusiveRestriction )
-                .isPresent() )
+        final ReadOnlyObjectWrapper< FocusedState > ret = new ReadOnlyObjectWrapper<>();
+        final Consumer< FocusedState > changedNodeConsumer = aFocusedState -> {
+            if( aFocusedState.getType() == FocusedState.Type.NORMAL )
             {
-                ret.set( aContainer );
+                final ContainerIf< ? > aContainer = aFocusedState.getFocusedContainer();
+                if( ContainerUtils.findAscendantExclusively( aContainer, p -> p == upperExclusiveRestriction )
+                    .isPresent() )
+                {
+                    ret.set( new FocusedState( aContainer, FocusedState.Type.NORMAL ) );
+                }
+                else
+                {
+                    ret.set( new FocusedState( aContainer, FocusedState.Type.OUT_OF_RESTRICTION ) );
+                }
+            }
+            else
+            {
+                ret.set( aFocusedState );
             }
         };
         changedNodeConsumer.accept( focusedContainer.getValue() );

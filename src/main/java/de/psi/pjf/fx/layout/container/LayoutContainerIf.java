@@ -30,10 +30,12 @@ public interface LayoutContainerIf< N extends BorderPane > extends ContainerIf< 
 {
 
     @JsonIgnore
-    ReadOnlyObjectProperty< ContainerIf< ? > > focusedContainerProperty();
+    ReadOnlyObjectProperty< FocusedState > focusedContainerProperty();
+
+    void clearFocus();
 
     @JsonIgnore
-    ContainerIf< ? > getFocusedContainer();
+    FocusedState getFocusedContainer();
 
     @JsonIgnore
     ContainerIf< ? > getContainerById( String id );
@@ -41,7 +43,7 @@ public interface LayoutContainerIf< N extends BorderPane > extends ContainerIf< 
     @JsonIgnore
     void storeContainerId( String id, ContainerIf< ? > aContainer );
 
-    ContainerIf< ? > removeStored( String id );
+    void removeStored( String id );
 
     ContainerIf< ? > getMainContainer();
 
