@@ -73,6 +73,7 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
     public void dispose()
     {
         focusTracker.dispose();
+        ContainerUtils.traverseDescendantExclusively( this, ContainerIf::dispose );
     }
 
     @Override
@@ -113,9 +114,9 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
     }
 
     @Override
-    public void removeStoredContainer( final String id )
+    public ContainerIf< ? > removeStoredContainer( final String id )
     {
-        containerIdsMap.remove( id );
+        return containerIdsMap.remove( id );
     }
 
     @Override

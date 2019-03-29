@@ -45,7 +45,7 @@ public interface LayoutContainerIf< N extends BorderPane > extends ContainerIf< 
     @JsonIgnore
     void storeContainerId( String id, ContainerIf< ? > aContainer );
 
-    void removeStoredContainer( String id );
+    ContainerIf< ? > removeStoredContainer( String id );
 
     ContainerIf< ? > getMainContainer();
 

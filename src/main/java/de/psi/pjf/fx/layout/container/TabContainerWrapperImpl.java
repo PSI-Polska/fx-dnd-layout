@@ -69,13 +69,19 @@ public class TabContainerWrapperImpl< N extends Node > extends AbstractSimpleCon
     {
         if( tab == null )
         {
-            tab = new Tab();
+            tab = createTab();
             ContainerUtils.storeContainer( this, tab );
-            if( name != null )
-            {
-                tab.setText( name );
-            }
             tab.setContent( getNode() );
+        }
+        return tab;
+    }
+
+    protected Tab createTab()
+    {
+        final Tab tab = new Tab();
+        if( name != null )
+        {
+            tab.setText( name );
         }
         return tab;
     }
@@ -102,7 +108,6 @@ public class TabContainerWrapperImpl< N extends Node > extends AbstractSimpleCon
     protected N createNode()
     {
         final N node = content.getNode();
-        // FIXME pkruszczynski 14.01.2019: to check
         return node;
     }
 

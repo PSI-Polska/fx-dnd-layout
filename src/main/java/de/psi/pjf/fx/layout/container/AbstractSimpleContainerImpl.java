@@ -145,4 +145,9 @@ public abstract class AbstractSimpleContainerImpl< N extends Node > implements C
     {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public void dispose()
+    {
+    }
 }

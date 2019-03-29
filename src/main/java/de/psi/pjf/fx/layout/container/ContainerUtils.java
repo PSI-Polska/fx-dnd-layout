@@ -69,6 +69,15 @@ public final class ContainerUtils
         return findDescendantExclusively( aContainer, aClass::isInstance ).map( aClass::cast );
     }
 
+    public static void traverseDescendantExclusively( final ContainerIf< ? > aContainer,
+        final Consumer< ContainerIf< ? > > aConsumer )
+    {
+        findDescendantExclusively( aContainer, aContainerIf -> {
+            aConsumer.accept( aContainerIf );
+            return false;
+        } );
+    }
+
     public static Optional< ContainerIf< ? > > findDescendantExclusively( final ContainerIf< ? > aContainer,
         final Predicate< ContainerIf< ? > > aPredicate )
     {

@@ -75,4 +75,6 @@ public interface ContainerIf< N extends Node > extends Serializable
 
     void removeChild( ContainerIf< ? > child );
 
+    void dispose();
+
 }
