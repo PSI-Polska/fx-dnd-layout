@@ -73,7 +73,9 @@ public class DndStackContainer extends StackContainerImpl implements DndCallback
     @Override
     protected void postNodeCreation( final Node aNode )
     {
+        super.postNodeCreation( aNode );
         initSplittableDnd( this );
+        aNode.getStyleClass().add( ContainerStylesConstants.DND_STACK_CONTAINER_STYLE_CLASS );
     }
 
     /**

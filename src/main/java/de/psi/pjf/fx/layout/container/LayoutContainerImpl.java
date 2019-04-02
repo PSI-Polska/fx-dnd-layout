@@ -32,18 +32,15 @@ import de.psi.pjf.fx.layout.util.FxUtils;
  * @author last change: $Author: $ on $Date: $
  * @version $Revision: $
  */
-public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
+public class LayoutContainerImpl extends AbstractSimpleContainerImpl< BorderPane >
+    implements LayoutContainerIf< BorderPane >
 {
     @JsonMerge
     @JsonProperty( value = "containerIdsMap" )
     private final Map< String, ContainerIf< ? > > containerIdsMap = new HashMap<>();
     @JsonIgnore
     private final FocusTracker focusTracker = new FocusTracker();
-    @JsonIgnore
-    private BorderPane pane;
     private ContainerIf< ? > mainContainer;
-    @JsonIgnore
-    private Map< Object, Object > properties;
 
     public LayoutContainerImpl( final ContainerIf< ? > aMainContainer )
     {
@@ -57,7 +54,7 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
     protected BorderPane createNode()
     {
         final BorderPane borderPane = new BorderPane();
-        borderPane.setId( "LayoutContainerImpl.BorderPane" );
+        borderPane.setId( ContainerStylesConstants.LAYOUT_CONTAINER_ID );
         if( mainContainer != null )
         {
             borderPane.setCenter( mainContainer.getNode() );
@@ -134,9 +131,9 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
         }
         mainContainer = aMainContainer;
         mainContainer.setParent( this );
-        if( pane != null )
+        if( isNodeCreated() )
         {
-            pane.setCenter( aMainContainer.getNode() );
+            getNode().setCenter( aMainContainer.getNode() );
         }
     }
 
@@ -172,18 +169,6 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
         return Collections.singletonList( mainContainer );
     }
 
-    @JsonIgnore
-    @Override
-    public BorderPane getNode()
-    {
-        if( pane == null )
-        {
-            pane = createNode();
-            ContainerUtils.storeContainer( this, pane );
-        }
-        return pane;
-    }
-
     @Override
     public int getChildrenCount()
     {
@@ -214,21 +199,10 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public Map< Object, Object > getProperties()
-    {
-        if( properties == null )
-        {
-            properties = new HashMap<>();
-        }
-        return properties;
-    }
-
     private static class FocusTracker implements ChangeListener< Node >
     {
         private final ReadOnlyObjectWrapper< FocusedState > focusedContainer =
-            new ReadOnlyObjectWrapper<>(
-                new FocusedState( null, FocusedState.Type.NULL ) );
+            new ReadOnlyObjectWrapper<>( new FocusedState( null, FocusedState.Type.NULL ) );
         private Scene scene;
 
         @Override
@@ -249,14 +223,11 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
                     n = n.getParent();
                 }
                 focusedContainer.set( new FocusedState( foundContainer,
-                    foundContainer == null ?
-                        FocusedState.Type.OUT_OF_LAYOUT :
-                        FocusedState.Type.NORMAL ) );
+                    foundContainer == null ? FocusedState.Type.OUT_OF_LAYOUT : FocusedState.Type.NORMAL ) );
             }
             else
             {
-                focusedContainer
-                    .set( new FocusedState( null, FocusedState.Type.NULL ) );
+                focusedContainer.set( new FocusedState( null, FocusedState.Type.NULL ) );
             }
         }
 
@@ -284,8 +255,7 @@ public class LayoutContainerImpl implements LayoutContainerIf< BorderPane >
 
         public void clearFocus()
         {
-            focusedContainer
-                .set( new FocusedState( null, FocusedState.Type.NULL ) );
+            focusedContainer.set( new FocusedState( null, FocusedState.Type.NULL ) );
         }
     }
 }

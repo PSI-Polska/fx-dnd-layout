@@ -53,5 +53,4 @@ public interface LayoutContainerIf< N extends BorderPane > extends ContainerIf< 
 
     void dispose();
 
-    Map< Object, Object > getProperties();
 }

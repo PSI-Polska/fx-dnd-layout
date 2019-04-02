@@ -8,7 +8,11 @@
 
 package de.psi.pjf.fx.layout.container;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javafx.geometry.Orientation;
+import javafx.scene.Node;
 import javafx.scene.control.SplitPane;
 
 /**
@@ -35,15 +39,20 @@ public class SplitContainerImpl extends AbstractContainerImpl< SplitPane, Contai
         {
             splitPane.setOrientation( orientation );
         }
+        final List< Node > items =
+            getChildrenInternal().stream().map( ContainerIf::getNode ).collect( Collectors.toList() );
+        splitPane.getItems().setAll( items );
         if( dividerPositions != null )
         {
             splitPane.setDividerPositions( dividerPositions );
         }
-        for( final ContainerIf< ? > child : getChildrenInternal() )
-        {
-            splitPane.getItems().add( child.getNode() );
-        }
         return splitPane;
+    }
+
+    @Override
+    protected void postNodeCreation( final Node aNode )
+    {
+        aNode.getStyleClass().add( ContainerStylesConstants.SPLIT_CONTAINER_STYLE_CLASS );
     }
 
     @Override

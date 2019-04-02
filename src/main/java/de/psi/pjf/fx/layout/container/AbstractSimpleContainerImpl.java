@@ -8,8 +8,13 @@
 
 package de.psi.pjf.fx.layout.container;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -37,6 +42,10 @@ public abstract class AbstractSimpleContainerImpl< N extends Node > implements C
     @JsonIgnore
     @JacksonInject
     private NodeCustomizerServiceIf nodeCustomizerService;
+    @JsonIgnore
+    private List< BiConsumer< ContainerIf< N >, N > > postNodeCreationConsumers;
+    @JsonIgnore
+    private Map< Object, Object > properties;
 
     protected abstract N createNode();
 
@@ -67,9 +76,45 @@ public abstract class AbstractSimpleContainerImpl< N extends Node > implements C
                 applyCustomizers( node );
             }
             nodeCreated = true;
+            runPostNodeCreationConsumers( node );
             postNodeCreation( node );
         }
         return node;
+    }
+
+    private void runPostNodeCreationConsumers( final N aNode )
+    {
+        if( postNodeCreationConsumers != null )
+        {
+            postNodeCreationConsumers.forEach( c -> c.accept( this, aNode ) );
+            postNodeCreationConsumers.clear();
+            postNodeCreationConsumers = null;
+        }
+    }
+
+    @Override
+    public void addPostNodeCreationConsumer( final BiConsumer< ContainerIf< N >, N > aConsumer )
+    {
+        if( isNodeCreated() )
+        {
+            aConsumer.accept( this, getNode() );
+            return;
+        }
+        if( postNodeCreationConsumers == null )
+        {
+            postNodeCreationConsumers = new ArrayList<>();
+        }
+        postNodeCreationConsumers.add( aConsumer );
+    }
+
+    @Override
+    public void removePostNodeCreationConsumer( final BiConsumer< ContainerIf< N >, N > aConsumer )
+    {
+        if( isNodeCreated() )
+        {
+            return;
+        }
+        postNodeCreationConsumers.remove( aConsumer );
     }
 
     private void applyCustomizers( final Node aNode )
@@ -150,4 +195,15 @@ public abstract class AbstractSimpleContainerImpl< N extends Node > implements C
     public void dispose()
     {
     }
+
+    @Override
+    public Map< Object, Object > getProperties()
+    {
+        if( properties == null )
+        {
+            properties = new HashMap<>();
+        }
+        return properties;
+    }
+
 }

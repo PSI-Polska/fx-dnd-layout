@@ -72,6 +72,7 @@ public class TabContainerWrapperImpl< N extends Node > extends AbstractSimpleCon
             tab = createTab();
             ContainerUtils.storeContainer( this, tab );
             tab.setContent( getNode() );
+            tab.getStyleClass().add( ContainerStylesConstants.TAB_CONTAINER_STYLE_CLASS );
         }
         return tab;
     }

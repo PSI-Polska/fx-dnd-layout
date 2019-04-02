@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Side;
+import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
@@ -61,13 +62,22 @@ public class StackContainerImpl extends AbstractContainerImpl< TabPane, TabConta
             }
             while( aChange.next() )
             {
-                aChange.getRemoved().stream().map( ContainerUtils::getContainer ).flatMap( Optional::stream )
-                    .map( TabContainerWrapperIf.class::cast ).forEach( getChildrenInternal()::remove );
+                final List< TabContainerWrapperIf > toRemove =
+                    aChange.getRemoved().stream().map( ContainerUtils::getContainer )
+                        .flatMap( Optional::stream ).map( TabContainerWrapperIf.class::cast )
+                        .collect( Collectors.toList() );
+                if( !toRemove.isEmpty() )
+                {
+                    getChildrenInternal().removeAll( toRemove );
+                }
                 final List< TabContainerWrapperIf< ? > > addedTabWrappers =
                     aChange.getAddedSubList().stream().map( ContainerUtils::getContainer )
                         .flatMap( Optional::stream ).map( e -> (TabContainerWrapperIf< ? >)e )
                         .collect( Collectors.toList() );
-                getChildrenInternal().addAll( aChange.getFrom(), addedTabWrappers );
+                if( !addedTabWrappers.isEmpty() )
+                {
+                    getChildrenInternal().addAll( aChange.getFrom(), addedTabWrappers );
+                }
             }
         } );
         if( selectedTab != null )
@@ -97,6 +107,12 @@ public class StackContainerImpl extends AbstractContainerImpl< TabPane, TabConta
             new SelectedTabFocuser( () -> selectedTab == null ? null : selectedTab.getNode() );
         selectedTabFocuser.install( tabPane );
         return tabPane;
+    }
+
+    @Override
+    protected void postNodeCreation( final Node aNode )
+    {
+        aNode.getStyleClass().add( ContainerStylesConstants.STACK_CONTAINER_STYLE_CLASS );
     }
 
     @JsonIgnore

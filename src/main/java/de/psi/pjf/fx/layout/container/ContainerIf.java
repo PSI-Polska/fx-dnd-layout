@@ -10,6 +10,8 @@ package de.psi.pjf.fx.layout.container;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -76,5 +78,12 @@ public interface ContainerIf< N extends Node > extends Serializable
     void removeChild( ContainerIf< ? > child );
 
     void dispose();
+
+    void addPostNodeCreationConsumer( BiConsumer< ContainerIf< N >, N > aConsumer );
+
+    void removePostNodeCreationConsumer( BiConsumer< ContainerIf< N >, N > aConsumer );
+
+    @JsonIgnore
+    Map< Object, Object > getProperties();
 
 }
