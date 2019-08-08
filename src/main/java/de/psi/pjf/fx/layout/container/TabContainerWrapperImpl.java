@@ -84,7 +84,26 @@ public class TabContainerWrapperImpl< N extends Node > extends AbstractSimpleCon
         {
             tab.setText( name );
         }
+        tab.setOnCloseRequest( c -> {
+            if( handleCloseRequest( tab ) )
+            {
+                c.consume();
+            }
+        } );
         return tab;
+    }
+
+    /**
+     * Provides custom implementation for handling tab closing request.
+     *
+     * @param aTab
+     *     tab which is being closed
+     *
+     * @return true if closing event should be consumed
+     */
+    protected boolean handleCloseRequest( final Tab aTab )
+    {
+        return false;
     }
 
     @Override
