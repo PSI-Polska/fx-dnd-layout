@@ -12,9 +12,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonMerge;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import javafx.scene.Node;
 
 /**
@@ -31,13 +32,25 @@ public abstract class AbstractContainerImpl< N extends Node, T extends Container
     extends AbstractSimpleContainerImpl< N >
 {
 
-    @JsonMerge
     @JsonProperty( value = "children" )
     private final List< T > children = new ArrayList<>();
     @JsonIgnore
     private final List< ContainerIf< ? > > childrenUnmodifiable = Collections.unmodifiableList( children );
 
     protected final List< T > getChildrenInternal()
+    {
+        return children;
+    }
+
+    @JsonSetter( "children" )
+    protected void setChildrenFromDeserialization( final List< T > aChildren )
+    {
+        children.clear();
+        children.addAll( aChildren );
+    }
+
+    @JsonGetter( "children" )
+    protected List< T > getChildrenForSerialization()
     {
         return children;
     }
@@ -78,7 +91,7 @@ public abstract class AbstractContainerImpl< N extends Node, T extends Container
     }
 
     @Override
-    public void addChild( int index, final ContainerIf< ? > child )
+    public void addChild( final int index, final ContainerIf< ? > child )
     {
         children.add( index, (T)child );
         child.setParent( this );
