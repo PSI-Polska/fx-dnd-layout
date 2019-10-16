@@ -58,6 +58,11 @@ public abstract class AbstractSimpleContainerImpl< N extends Node > implements C
     {
     }
 
+    /**
+     * Exposed for tests purposes.
+     *
+     * @return currently applied customizers' ids
+     */
     @JsonIgnore
     Set< String > getNodeCustomizerIds()
     {
@@ -194,6 +199,10 @@ public abstract class AbstractSimpleContainerImpl< N extends Node > implements C
     @Override
     public void dispose()
     {
+        if( node != null )
+        {
+            ContainerUtils.clearContainerData( node );
+        }
     }
 
     @Override

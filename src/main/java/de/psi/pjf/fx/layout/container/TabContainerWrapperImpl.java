@@ -147,4 +147,15 @@ public class TabContainerWrapperImpl< N extends Node > extends AbstractSimpleCon
     {
         return (StackContainerIf< ? >)super.getParent();
     }
+
+    @Override
+    public void dispose()
+    {
+        if( tab != null )
+        {
+            tab.setOnCloseRequest( null );
+            ContainerUtils.clearContainerData( tab );
+        }
+        super.dispose();
+    }
 }

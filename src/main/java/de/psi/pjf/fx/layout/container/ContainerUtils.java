@@ -155,6 +155,21 @@ public final class ContainerUtils
         storeContainer( aContainer, aTab.getProperties() );
     }
 
+    public static void clearContainerData( final Node aNode )
+    {
+        clearContainerData( aNode.getProperties() );
+    }
+
+    public static void clearContainerData( final Tab aTab )
+    {
+        clearContainerData( aTab.getProperties() );
+    }
+
+    private static void clearContainerData( final ObservableMap< Object, Object > aProperties )
+    {
+        aProperties.remove( CONTAINER_PROPERTY_KEY );
+    }
+
     private static void storeContainer( final ContainerIf< ? > aContainer,
         final ObservableMap< Object, Object > aProperties )
     {
