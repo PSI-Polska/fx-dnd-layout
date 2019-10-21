@@ -10,6 +10,7 @@
  *******************************************************************************/
 package de.psi.pjf.fx.layout.dnd.skin;
 
+import java.lang.ref.WeakReference;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -48,7 +49,7 @@ public class DndTabPaneSkinHooker implements DndTabPaneFactory.DragSetup
      * Custom data format for move data
      */
     public static final DataFormat TAB_MOVE = new DataFormat( "DnDTabPane:tabMove" ); //$NON-NLS-1$
-    private static Tab DRAGGED_TAB;
+    private static WeakReference< Tab > DRAGGED_TAB;
     private final TabPane pane;
     private Predicate< TabContainerWrapperIf< ? > > startFunction;
     private Function< TabContainerWrapperIf< ? >, String > clipboardDataFunction;
@@ -131,55 +132,10 @@ public class DndTabPaneSkinHooker implements DndTabPaneFactory.DragSetup
 
     }
 
-    @Override
-    public void setClipboardDataFunction(
-        Function< TabContainerWrapperIf< ? >, String > clipboardDataFunction )
-    {
-        this.clipboardDataFunction = clipboardDataFunction;
-    }
-
-    @Override
-    public void setDragFinishedConsumer( Consumer< TabContainerWrapperIf< ? > > dragFinishedConsumer )
-    {
-        this.dragFinishedConsumer = dragFinishedConsumer;
-    }
-
-    @Override
-    public void setDropConsumer( Consumer< DndTabPaneFactory.DroppedData > dropConsumer )
-    {
-        this.dropConsumer = dropConsumer;
-    }
-
-    @Override
-    public void setFeedbackConsumer( Consumer< DndTabPaneFactory.FeedbackData > feedbackConsumer )
-    {
-        this.feedbackConsumer = feedbackConsumer;
-    }
-
-    @Override
-    public void setStartFunction( Predicate< TabContainerWrapperIf< ? > > startFunction )
-    {
-        this.startFunction = startFunction;
-    }
-
-    private Tab getTab( Node n )
-    {
-        int tabIdx = n.getParent().getChildrenUnmodifiable().indexOf( n ); // The
-        // order
-        // in
-        // the
-        // parent
-        // ==
-        // order
-        // in
-        // pane.getTabs()
-        return this.pane.getTabs().get( tabIdx );
-    }
-
     @SuppressWarnings( "all" )
     void tabPane_handleDragDropped( Pane tabHeaderArea, Pane headersRegion, DragEvent event )
     {
-        Tab draggedTab = DRAGGED_TAB;
+        Tab draggedTab = getDraggedTab();
         if( draggedTab == null )
         {
             return;
@@ -278,6 +234,51 @@ public class DndTabPaneSkinHooker implements DndTabPaneFactory.DragSetup
         }
     }
 
+    @Override
+    public void setClipboardDataFunction(
+        Function< TabContainerWrapperIf< ? >, String > clipboardDataFunction )
+    {
+        this.clipboardDataFunction = clipboardDataFunction;
+    }
+
+    @Override
+    public void setDragFinishedConsumer( Consumer< TabContainerWrapperIf< ? > > dragFinishedConsumer )
+    {
+        this.dragFinishedConsumer = dragFinishedConsumer;
+    }
+
+    @Override
+    public void setDropConsumer( Consumer< DndTabPaneFactory.DroppedData > dropConsumer )
+    {
+        this.dropConsumer = dropConsumer;
+    }
+
+    @Override
+    public void setFeedbackConsumer( Consumer< DndTabPaneFactory.FeedbackData > feedbackConsumer )
+    {
+        this.feedbackConsumer = feedbackConsumer;
+    }
+
+    @Override
+    public void setStartFunction( Predicate< TabContainerWrapperIf< ? > > startFunction )
+    {
+        this.startFunction = startFunction;
+    }
+
+    private Tab getTab( Node n )
+    {
+        int tabIdx = n.getParent().getChildrenUnmodifiable().indexOf( n ); // The
+        // order
+        // in
+        // the
+        // parent
+        // ==
+        // order
+        // in
+        // pane.getTabs()
+        return this.pane.getTabs().get( tabIdx );
+    }
+
     void tabPane_handleDragStart( MouseEvent event )
     {
         try
@@ -287,7 +288,7 @@ public class DndTabPaneSkinHooker implements DndTabPaneFactory.DragSetup
             if( t != null && ContainerUtils.< TabContainerWrapperIf< ? > >getContainer( t )
                 .filter( this::efx_canStartDrag ).isPresent() )
             {
-                DRAGGED_TAB = t;
+                DRAGGED_TAB = new WeakReference<>( t );
                 Node node = (Node)event.getSource();
                 Dragboard db = node.startDragAndDrop( TransferMode.MOVE );
 
@@ -343,7 +344,7 @@ public class DndTabPaneSkinHooker implements DndTabPaneFactory.DragSetup
     @SuppressWarnings( "all" )
     void tabPane_handleDragOver( Pane tabHeaderArea, Pane headersRegion, DragEvent event )
     {
-        Tab draggedTab = DRAGGED_TAB;
+        Tab draggedTab = getDraggedTab();
         final Optional< TabContainerWrapperIf< ? > > draggedTabContainer =
             ContainerUtils.< TabContainerWrapperIf< ? > >getContainer( draggedTab );
         if( draggedTab == null || draggedTabContainer.isEmpty() )
@@ -449,13 +450,22 @@ public class DndTabPaneSkinHooker implements DndTabPaneFactory.DragSetup
 
     void tabPane_handleDragDone( DragEvent event )
     {
-        Tab tab = DRAGGED_TAB;
+        Tab tab = getDraggedTab();
         if( tab == null )
         {
             return;
         }
 
         efx_dragFinished( ContainerUtils.< TabContainerWrapperIf< ? > >getContainer( tab ).orElseThrow() );
+    }
+
+    private static Tab getDraggedTab()
+    {
+        if( DRAGGED_TAB == null )
+        {
+            return null;
+        }
+        return DRAGGED_TAB.get();
     }
 
     private boolean efx_canStartDrag( TabContainerWrapperIf< ? > tab )
