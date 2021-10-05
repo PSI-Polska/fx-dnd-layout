@@ -47,7 +47,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>11</java.version>
-        <jackson.version>2.9.9.2</jackson.version>
+        <jackson.version>2.10.5.1</jackson.version>
     </properties>
 
     <build>
