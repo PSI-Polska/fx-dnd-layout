@@ -102,11 +102,19 @@ public final class ContainerUtils
 
     public static < T extends ContainerIf< ? > > Optional< T > getContainer( final Node aNode )
     {
+        if( aNode == null )
+        {
+            return Optional.empty();
+        }
         return getContainer( aNode.getProperties() );
     }
 
     public static < T extends ContainerIf< ? > > Optional< T > getContainer( final Tab aTab )
     {
+        if( aTab == null )
+        {
+            return Optional.empty();
+        }
         return getContainer( aTab.getProperties() );
     }
 
