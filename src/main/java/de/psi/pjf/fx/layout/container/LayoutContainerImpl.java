@@ -59,9 +59,16 @@ public class LayoutContainerImpl extends AbstractSimpleContainerImpl< BorderPane
         {
             borderPane.setCenter( mainContainer.getNode() );
         }
-        FxUtils.executeOnceWhenPropertyIsNonNull( borderPane.sceneProperty(), scene -> {
-            focusTracker.setScene( scene );
-            scene.focusOwnerProperty().addListener( focusTracker );
+        borderPane.sceneProperty().addListener( ( aObservable, aOldScene, aNewScene ) -> {
+            if( aOldScene != null )
+            {
+                aOldScene.focusOwnerProperty().removeListener( focusTracker );
+            }
+            focusTracker.setScene( aNewScene );
+            if( aNewScene != null )
+            {
+                aNewScene.focusOwnerProperty().addListener( focusTracker );
+            }
         } );
         return borderPane;
     }
