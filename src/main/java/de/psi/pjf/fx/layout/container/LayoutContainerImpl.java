@@ -241,8 +241,11 @@ public class LayoutContainerImpl extends AbstractSimpleContainerImpl< BorderPane
         public void dispose()
         {
             focusedContainer.set( new FocusedState( null, FocusedState.Type.NULL ) );
-            scene.focusOwnerProperty().removeListener( this );
-            this.scene = null;
+            if( scene != null )
+            {
+                scene.focusOwnerProperty().removeListener( this );
+            }
+            scene = null;
         }
 
         public ReadOnlyObjectProperty< FocusedState > focusedContainerProperty()
