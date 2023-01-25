@@ -64,6 +64,7 @@ public class DefaultDndFeedback implements DndFeedbackService
         if( first.isPresent() )
         {
             overlay = (AreaOverlay)first.get();
+            overlay.toFront();
         }
         else
         {
