@@ -32,6 +32,8 @@ import de.psi.pjf.fx.layout.util.FxUtils;
 public class DefaultDndFeedback implements DndFeedbackService
 {
 
+    public static final double LEFT_RIGHT_RATIO = 0.2;
+
     @Override
     public MarkerFeedback showFeedback( DnDFeedbackData data )
     {
@@ -68,7 +70,7 @@ public class DefaultDndFeedback implements DndFeedbackService
         }
         else
         {
-            overlay = new AreaOverlay( 0.2 );
+            overlay = new AreaOverlay( LEFT_RIGHT_RATIO );
             overlay.setManaged( false );
             overlay.setMouseTransparent( true );
             layoutNode.getChildren().add( overlay );
