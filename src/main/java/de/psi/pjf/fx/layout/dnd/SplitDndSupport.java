@@ -25,6 +25,8 @@ import de.psi.pjf.fx.layout.container.ContainerIf;
 import de.psi.pjf.fx.layout.container.ContainerUtils;
 import de.psi.pjf.fx.layout.util.FxUtils;
 
+import static de.psi.pjf.fx.layout.dnd.DefaultDndFeedback.LEFT_RIGHT_RATIO;
+
 /**
  * Implementation of splitting with DnD
  *
@@ -34,8 +36,6 @@ import de.psi.pjf.fx.layout.util.FxUtils;
 public class SplitDndSupport< M extends DndCallbackProviderIf & ContainerIf< ? > > extends AbstractDndSupport
 {
 
-    private static int SPLIT_PADDING = 20;
-    private static int SPLIT_THRESHOLD = 100;
     private final DndService constraintService;
     private final M widget;
 
@@ -336,30 +336,31 @@ public class SplitDndSupport< M extends DndCallbackProviderIf & ContainerIf< ? >
 
     private SplitAreas calculateSplitAreas()
     {
-        Bounds bounds = this.widget.getNode().getBoundsInLocal();
-        Bounds leftSplit =
-            new BoundingBox( bounds.getMinX(), bounds.getMinY(), SPLIT_THRESHOLD, bounds.getHeight() );
-        Bounds rightSplit =
-            new BoundingBox( bounds.getMaxX() - SPLIT_THRESHOLD, bounds.getMinY(), SPLIT_THRESHOLD,
-                bounds.getHeight() );
+        Bounds bounds = this.widget.getNode()
+            .getBoundsInLocal();
 
-        Bounds topSplit = new BoundingBox( bounds.getMinX() + SPLIT_THRESHOLD, bounds.getMinY(),
-            bounds.getWidth() - 2 * SPLIT_THRESHOLD, SPLIT_THRESHOLD );
-        Bounds bottomSplit =
-            new BoundingBox( bounds.getMinX() + SPLIT_THRESHOLD, bounds.getMaxY() - SPLIT_THRESHOLD,
-                bounds.getWidth() - 2 * SPLIT_THRESHOLD, SPLIT_THRESHOLD );
+        Bounds leftSplit = new BoundingBox( bounds.getMinX(), bounds.getMinY(),
+            bounds.getWidth() * LEFT_RIGHT_RATIO, bounds.getHeight() );
+
+        Bounds rightSplit = new BoundingBox( bounds.getMaxX() - bounds.getWidth() * LEFT_RIGHT_RATIO,
+            bounds.getMinY(), bounds.getWidth() * LEFT_RIGHT_RATIO, bounds.getHeight() );
+
+        Bounds topSplit =
+            new BoundingBox( bounds.getMinX() + bounds.getWidth() * LEFT_RIGHT_RATIO, bounds.getMinY(),
+                bounds.getWidth() - 2 * LEFT_RIGHT_RATIO * bounds.getWidth(), bounds.getHeight() / 2 );
+
+        Bounds bottomSplit = new BoundingBox( bounds.getMinX() + bounds.getWidth() * LEFT_RIGHT_RATIO * 2,
+            bounds.getMaxY() - bounds.getWidth() * LEFT_RIGHT_RATIO,
+            bounds.getWidth() - bounds.getWidth() * LEFT_RIGHT_RATIO * 2, bounds.getHeight() / 2 );
 
         return new SplitAreas( leftSplit, rightSplit, topSplit, bottomSplit );
     }
 
     private boolean isNotInSplitBounds( Event e )
     {
-        Bounds boundsInLocal = this.widget.getNode().getBoundsInLocal();
-        boundsInLocal = new BoundingBox( boundsInLocal.getMinX() + SPLIT_THRESHOLD,
-            boundsInLocal.getMinY() + SPLIT_THRESHOLD,
-            Math.max( 0, boundsInLocal.getWidth() - SPLIT_THRESHOLD * 2 ),
-            Math.max( 0, boundsInLocal.getHeight() - SPLIT_THRESHOLD * 2 ) );
-        return boundsInLocal.contains( x( e ), y( e ) );
+        Bounds boundsInLocal = this.widget.getNode()
+            .getBoundsInLocal();
+        return !boundsInLocal.contains( x( e ), y( e ) );
     }
 
     public void install()
